@@ -1,0 +1,70 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <import type="com.ap.transmission.btc.Prefs.K" />
+
+        <import type="com.ap.transmission.btc.services.TransmissionService" />
+
+        <variable
+            name="p"
+            type="com.ap.transmission.btc.Prefs" />
+
+        <variable
+            name="h"
+            type="com.ap.transmission.btc.BindingHelper" />
+    </data>
+
+    <RelativeLayout
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/buttons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/button_start_stop"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="50"
+                android:nextFocusUp="@id/pager"
+                android:onClick="@{b->h.startStopService(b, buttonWebUi)}"
+                android:text="@{h.serviceRunning ? @string/stop : @string/start}" />
+
+            <Button
+                android:id="@+id/button_web_ui"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="50"
+                android:enabled="@{h.and(p.rpcEnabled, h.serviceRunning)}"
+                android:onClick="@{()->h.openUrl(&quot;http&quot;, &quot;localhost&quot;, p.rpcPort, &quot;/transmission/web/&quot;)}"
+                android:text="@string/webui" />
+        </LinearLayout>
+
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tabs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nextFocusDown="@id/pager" />
+
+        <android.support.v4.view.ViewPager
+            android:id="@+id/pager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@id/buttons"
+            android:layout_below="@+id/tabs"
+            android:layout_marginBottom="3pt"
+            android:layout_marginTop="3pt"
+            android:nextFocusDown="@id/button_start_stop"
+            android:nextFocusUp="@id/tabs" />
+
+    </RelativeLayout>
+</layout>

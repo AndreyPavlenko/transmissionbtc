@@ -1,0 +1,29 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <import type="com.ap.transmission.btc.Prefs" />
+
+        <import type="com.ap.transmission.btc.BindingHelper" />
+
+        <variable
+            name="p"
+            type="Prefs" />
+
+        <variable
+            name="h"
+            type="com.ap.transmission.btc.BindingHelper" />
+    </data>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.ap.transmission.btc.views.TorrentsList
+            android:id="@+id/torrents_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:helper="@{h}" />
+    </ScrollView>
+</layout>

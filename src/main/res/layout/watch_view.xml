@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
+        android:background="@drawable/border">
+
+        <com.ap.transmission.btc.views.BrowseView
+            android:id="@+id/watch_view_dir"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            app:editable="false"
+            app:select_dir="true"
+            app:title="@string/watch_dir" />
+
+        <com.ap.transmission.btc.views.BrowseView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/watch_view_dir"
+            android:layout_alignRight="@+id/watch_view_dir"
+            android:layout_below="@+id/watch_view_dir"
+            app:editable="false"
+            app:select_dir="true"
+            app:title="@string/download_dir"
+            tools:ignore="RtlHardcoded" />
+
+    </RelativeLayout>
+
+</merge>

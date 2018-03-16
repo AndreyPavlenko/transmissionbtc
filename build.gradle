@@ -1,0 +1,155 @@
+def version = '1.2.9'
+def versionNum = 49
+def basic_version = '1.0.0'
+def basic_versionNum = 1
+
+buildscript {
+
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.1.3'
+    }
+}
+
+repositories {
+    google()
+    jcenter()
+}
+
+apply plugin: 'com.android.application'
+
+def localProps = new Properties()
+localProps.load(file('local.properties').newDataInputStream())
+def apiMap = ['14': '4.0', '21': '5.0']
+def abiMap = ['arm': 'armeabi-v7a', 'arm64': 'arm64-v8a', 'x86': 'x86', 'x86_64': 'x86_64']
+def flavors = [
+        [
+                'arch'       : 'arm64',
+                'versionBase': 8,
+                'api'        : [21]
+
+        ],
+        [
+                'arch'       : 'arm',
+                'versionBase': 7,
+                'api'        : [14, 21]
+        ],
+        [
+                'arch'       : 'x86_64',
+                'versionBase': 6,
+                'api'        : [21]
+        ],
+        [
+                'arch'       : 'x86',
+                'versionBase': 3,
+                'api'        : [14]
+        ]
+]
+
+android {
+    defaultConfig {
+        applicationId 'com.ap.transmission.btc'
+        minSdkVersion 14
+        targetSdkVersion 27
+        compileSdkVersion 27
+        versionCode versionNum
+        versionName version
+        externalNativeBuild.cmake.targets 'transmissionbtc'
+    }
+
+    flavorDimensions 'main'
+    dataBinding.enabled true
+    externalNativeBuild.cmake.path 'CMakeLists.txt'
+
+    flavors.each { f ->
+        f['api'].forEach { api ->
+            def arch = f['arch']
+            def name = "android_${apiMap["${api}"]}-${arch}"
+            def vcode = (f['versionBase'] * 1000000) + (api * 10000) + versionNum
+            def depends = "${localProps['depends']}/${arch}-api${api}"
+
+            productFlavors.create(name) {
+                dimension 'main'
+                minSdkVersion api
+                versionCode vcode
+                sourceSets[name].assets.srcDirs += "${depends}/share/transmission"
+
+                externalNativeBuild {
+                    ndk.abiFilters abiMap[arch]
+                    cmake {
+                        arguments "-DANDROID_PLATFORM=android-${api}"
+                        arguments "-Ddepends='${depends}'"
+                    }
+                }
+            }
+        }
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(localProps["kestorePath"])
+            storePassword localProps["kestorePassword"]
+            keyAlias localProps["kestoreAlias"]
+            keyPassword localProps["kestoreKeyPassword"]
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        pro {
+            initWith release
+            applicationIdSuffix '.pro'
+        }
+        debug_pro {
+            initWith debug
+            applicationIdSuffix '.pro'
+        }
+        basic {
+            initWith release
+            applicationIdSuffix '.basic'
+        }
+        debug_basic {
+            initWith debug
+            applicationIdSuffix '.basic'
+        }
+    }
+
+    applicationVariants.all { v ->
+        def vname = versionName
+        def vcode = versionCode
+
+        if (v.buildType.name.endsWith("basic")) {
+            vname = basic_version
+            vcode = (vcode - versionNum) + basic_versionNum
+            v.mergedFlavor.versionName = vname
+            v.mergedFlavor.versionCode = vcode
+        }
+        v.outputs.all {
+            def name = "${v.applicationId}-${v.flavorName}-${v.mergedFlavor.versionName}"
+            if (v.buildType.name.startsWith('debug')) name += '_debug'
+            outputFileName = "${name}.apk"
+            setVersionNameOverride(vname)
+            setVersionCodeOverride(vcode)
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support:design:27.1.1'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+
+task cleanAll(type: Delete) {
+    delete project.buildDir
+}

@@ -1,0 +1,126 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">Transmission BTC</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="webui">Web UI</string>
+    <string name="browse">Browse</string>
+    <string name="ok" tools:ignore="ButtonCase,Typos">Ok</string>
+    <string name="cancel">Cancel</string>
+    <string name="new_folder">New</string>
+    <string name="settings_dir">Settings directory</string>
+    <string name="download_dir">Download directory</string>
+    <string name="enable_watch_dir">Enable watch directory</string>
+    <string name="watch_interval">Scan interval in seconds (optional)</string>
+    <string name="add_watch_dir">Add watch directory</string>
+    <string name="watch_dir">Watch directory</string>
+    <string name="enable_upnp">Enable UPnP</string>
+    <string name="http_port">HTTP Port</string>
+    <string name="enable_rpc">Enable RPC</string>
+    <string name="enable_rpc_whitelist">Enable RPC Whitelist</string>
+    <string name="rpc_port">RPC Port</string>
+    <string name="start_foreground">Start foreground</string>
+    <string name="start_on_boot">Start on boot</string>
+    <string name="boot_delay">Boot delay in seconds</string>
+    <string name="wifi_eth_only">WiFi/Ethernet network only</string>
+    <string name="wifi_eth_only_ssid">Allowed SSIDs</string>
+    <string name="increase_so_buf">Increase socket buffers (requires root)</string>
+    <string name="enable_seq_download">Enable sequential download</string>
+    <string name="auth_required">Authentication required</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="paused">Paused</string>
+    <string name="verifying_data">Verifying local data</string>
+    <string name="torrent_link">Torrent or magnet link</string>
+    <string name="folder_name">Folder name</string>
+
+    <string name="encr_mode">Encryption mode</string>
+    <string name="encr_mode_allow">Allow encryption</string>
+    <string name="encr_mode_prefer">Prefer encryption</string>
+    <string name="encr_mode_require">Require encryption</string>
+
+    <string name="proxy_enable">Enable Proxy</string>
+    <string name="proxy_all">ALL</string>
+    <string name="proxy_http">HTTP</string>
+    <string name="proxy_https">HTTPS</string>
+    <string name="proxy_no">NO PROXY</string>
+    <string name="proxy_all_hint">http://host:80</string>
+    <string name="proxy_http_hint">https://host:443</string>
+    <string name="proxy_https_hint">https://user:pass@host:443</string>
+    <string name="proxy_no_hint">localhost, 127.0.0.1</string>
+
+    <string name="download">Download</string>
+    <string name="open">Open</string>
+    <string name="enqueue">Enqueue</string>
+    <string name="open_with">Open with</string>
+    <string name="download_with_transmission">Download with Transmission BTC</string>
+    <string name="open_with_transmission">Open with Transmission BTC</string>
+
+    <string name="title_downloads">Downloads</string>
+    <string name="title_settings">Settings</string>
+    <string name="title_watch_dirs">Watch Directories</string>
+    <string name="title_proxy">Proxy settings</string>
+    <string name="title_rss">RSS</string>
+    <string name="title_about">About</string>
+
+    <string name="notif_running1">Running</string>
+    <string name="notif_running2">Running: %s</string>
+    <string name="notif_suspended1">Suspended</string>
+    <string name="notif_suspended2">Suspended: %s</string>
+
+    <string name="about_html"><![CDATA[<H1 align="center">Transmission BitTorrent Client</H1>
+        <p>Transmission is a powerful yet extremely lightweight and fast BitTorrent client. It has
+        the features you want from a BitTorrent client: encryption, a web interface, peer exchange,
+        magnet links, DHT, µTP, UPnP and NAT-PMP port forwarding, webseed support, tracker editing,
+        global and per-torrent speed limits, and more.</p>
+        <p>This application is a port of the Transmission daemon for Android with a few additions.
+        The daemon is running as a background service. To communicate with the daemon you may
+        either use the built-in WEB interface or any Transmission remote of choice.</p>
+        <p>For more information on the Transmission client please refer to the official site of the
+        Transmission Project -
+        <a href="https://transmissionbt.com/">https://transmissionbt.com/</a>.</p><br/>
+        <p><b>Author:</b> Andrey Pavlenko
+        <p><b>Version:</b> %1$s (%2$d)
+        <p><b>Transmission version:</b> %3$s
+        <p><b>IP Address:</b> %4$s
+        ]]>
+    </string>
+
+    <string name="menu_add_file">Add file</string>
+    <string name="menu_add_link">Add link</string>
+    <string name="menu_play">Play</string>
+    <string name="menu_pause">Pause</string>
+    <string name="menu_suspend">Suspend</string>
+    <string name="menu_resume">Resume</string>
+    <string name="menu_verify">Verify</string>
+    <string name="menu_set_location">Set location</string>
+    <string name="menu_remove">Remove torrent</string>
+    <string name="menu_remove_and_trash">Remove torrent and data</string>
+    <string name="menu_expand">Expand</string>
+    <string name="menu_collapse">Collapse</string>
+    <string name="menu_new_folder">New folder</string>
+
+    <string name="err_dir_not_writable">Directory is not writable: %s</string>
+    <string name="err_no_persist_perm">Persistable permission not granted</string>
+    <string name="err_no_persist_perm_arg">Persistable permission not granted: %s</string>
+    <string name="err_failed_to_get_path">Failed to get real path: %s</string>
+    <string name="err_create_dir">Failed to create directory: %s</string>
+    <string name="err_browser_not_found">Failed to open web browser</string>
+    <string name="err_check_root_failed">Could not get root privileges</string>
+    <string name="err_no_torrent_file">Torrent file is not specified</string>
+    <string name="err_failed_to_open_torrent_file">Failed to open torrent file: %s</string>
+    <string name="err_failed_to_open_playlist">Failed to open playlist</string>
+    <string name="err_failed_to_open_torrent">Failed to open torrent: %s</string>
+    <string name="err_failed_to_parse_torrent_file">Failed to parse torrent file</string>
+    <string name="err_failed_to_load_torrent">Failed to load torrent: %s</string>
+    <string name="err_failed_to_load_magnet">Failed to load magnet link: %s</string>
+    <string name="err_torrent_already_added">The torrent is already added</string>
+    <string name="err_service_not_started">The transmission service is not started</string>
+    <string name="err_failed_to_start_transmission">Failed to start transmission service</string>
+    <string name="err_failed_to_start_http_server">Failed to start HTTP server: %s</string>
+    <string name="err_timeout_exceeded">Timeout exceeded</string>
+
+    <string name="msg_select_file">Please select at least one file</string>
+    <string name="msg_no_files_in_torrent">The torrent has no files</string>
+    <string name="msg_enter_link">Please enter the link</string>
+    <string name="msg_playlist_copied">Playlist URL copied to clipboard</string>
+</resources>

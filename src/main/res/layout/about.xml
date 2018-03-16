@@ -1,0 +1,43 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <import type="com.ap.transmission.btc.Prefs" />
+
+        <import type="com.ap.transmission.btc.Prefs.K" />
+
+        <import type="com.ap.transmission.btc.BindingHelper" />
+
+        <import type="com.ap.transmission.btc.BuildConfig" />
+        <import type="com.ap.transmission.btc.torrent.Transmission" />
+
+        <variable
+            name="p"
+            type="Prefs" />
+
+        <variable
+            name="h"
+            type="com.ap.transmission.btc.BindingHelper" />
+    </data>
+
+    <ScrollView
+        android:id="@+id/about"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="1">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="fill_horizontal"
+                app:html="@{String.format(@string/about_html, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, Transmission.getVersion(), h.ip)}" />
+
+        </GridLayout>
+    </ScrollView>
+</layout>

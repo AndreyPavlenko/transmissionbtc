@@ -1,0 +1,352 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <import type="com.ap.transmission.btc.Prefs.K" />
+
+        <variable
+            name="p"
+            type="com.ap.transmission.btc.Prefs" />
+
+        <variable
+            name="h"
+            type="com.ap.transmission.btc.BindingHelper" />
+    </data>
+
+    <ScrollView
+        android:id="@+id/settings"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="2">
+
+            <!-- Download dir -->
+            <com.ap.transmission.btc.views.BrowseView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_gravity="fill_horizontal"
+                app:editable="false"
+                app:pref="@{K.DOWNLOAD_DIR}"
+                app:select_dir="true"
+                app:title="@string/download_dir" />
+
+            <!-- Settings dir -->
+            <com.ap.transmission.btc.views.BrowseView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_gravity="fill_horizontal"
+                app:editable="false"
+                app:pref="@{K.SETTINGS_DIR}"
+                app:select_dir="true"
+                app:title="@string/settings_dir" />
+
+            <!-- Watch dir -->
+            <!--TextView
+                android:layout_height="wrap_content"
+                android:layout_gravity="fill_horizontal"
+                android:text="@string/enable_watch_dir"
+                android:textStyle="bold"
+                android:visibility="@{h.basic}" />
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:visibility="@{h.basic}"
+                app:pref="@{K.ENABLE_WATCH_DIR}" />
+
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_gravity="fill_horizontal"
+                android:text="@string/watch_interval"
+                android:textStyle="bold"
+                android:visibility="@{h.and(p.watchDirEnabled, h.basic)}" />
+
+            <EditText
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:gravity="right"
+                android:inputType="numberDecimal"
+                android:minEms="2"
+                android:visibility="@{h.and(p.watchDirEnabled, h.basic)}"
+                app:pref="@{K.WATCH_INTERVAL}" />
+
+            <com.ap.transmission.btc.views.BrowseView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_gravity="fill_horizontal"
+                android:visibility="@{h.and(p.watchDirEnabled, h.basic)}"
+                app:pref="@{K.WATCH_DIR}"
+                app:select_dir="true"
+                app:title="@string/watch_dir" /-->
+
+            <!-- WiFi eth only -->
+            <com.ap.transmission.btc.views.CheckBoxView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:visibility="@{!h.basic}"
+                app:pref="@{K.WIFI_ETH_ONLY}"
+                app:text="@string/wifi_eth_only" />
+
+            <!-- Allowed SSIDs -->
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_gravity="fill_horizontal"
+                android:layout_marginLeft="10dp"
+                android:text="@string/wifi_eth_only_ssid"
+                android:textStyle="bold"
+                android:visibility="@{p.wifiEthOnly}" />
+
+            <EditText
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_gravity="fill_horizontal"
+                android:layout_marginLeft="10dp"
+                android:hint="Home WiFi, Guest WiFi"
+                android:inputType="text"
+                android:maxLines="1"
+                android:visibility="@{p.wifiEthOnly}"
+                app:pref="@{K.WIFI_SSID}" />
+
+            <!-- Encryption mode -->
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_gravity="fill_horizontal"
+                android:text="@string/encr_mode"
+                android:textStyle="bold"
+                android:visibility="@{!h.basic}" />
+
+            <Spinner
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:gravity="right"
+                android:visibility="@{!h.basic}"
+                app:pref="@{K.ENCR_MODE}" />
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_columnSpan="2"
+                android:background="@drawable/separator"
+                android:visibility="@{!h.basic}" />
+
+            <!-- Start foreground -->
+            <com.ap.transmission.btc.views.CheckBoxView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                app:pref="@{K.FOREGROUND}"
+                app:text="@string/start_foreground" />
+
+            <!-- Start on boot -->
+            <com.ap.transmission.btc.views.CheckBoxView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                app:pref="@{K.START_ON_BOOT}"
+                app:text="@string/start_on_boot" />
+
+            <!-- Boot delay -->
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_gravity="fill_horizontal"
+                android:layout_marginLeft="10dp"
+                android:text="@string/boot_delay"
+                android:textStyle="bold"
+                android:visibility="@{p.startOnBoot}" />
+
+            <EditText
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:focusable="true"
+                android:gravity="right"
+                android:inputType="numberDecimal"
+                android:maxLength="5"
+                android:minEms="2"
+                android:visibility="@{p.startOnBoot}"
+                app:pref="@{K.BOOT_DELAY}" />
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_columnSpan="2"
+                android:layout_marginLeft="10dp"
+                android:background="@drawable/separator"
+                android:visibility="@{p.startOnBoot}" />
+
+            <!-- Increase SO buf -->
+            <com.ap.transmission.btc.views.CheckBoxView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:visibility="@{!h.basic}"
+                app:onClick="@{h::checkRoot}"
+                app:pref="@{K.INCREASE_SO_BUF}"
+                app:text="@string/increase_so_buf" />
+
+            <!-- Enable sequential download -->
+            <com.ap.transmission.btc.views.CheckBoxView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:visibility="@{!h.basic}"
+                app:pref="@{K.ENABLE_SEQ_DOWNLOAD}"
+                app:text="@string/enable_seq_download" />
+
+            <!-- Enable UPnP -->
+            <com.ap.transmission.btc.views.CheckBoxView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:visibility="@{!h.basic}"
+                app:pref="@{K.ENABLE_UPNP}"
+                app:text="@string/enable_upnp" />
+
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_gravity="fill_horizontal"
+                android:layout_marginLeft="10dp"
+                android:text="@string/http_port"
+                android:textStyle="bold"
+                android:visibility="@{h.and(!h.basic, p.upnpEnabled)}" />
+
+            <EditText
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:gravity="right"
+                android:inputType="numberDecimal"
+                android:maxLength="5"
+                android:minEms="2"
+                android:visibility="@{h.and(!h.basic, p.upnpEnabled)}"
+                app:pref="@{K.HTTP_SERVER_PORT}" />
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_columnSpan="2"
+                android:layout_marginLeft="10dp"
+                android:background="@drawable/separator"
+                android:visibility="@{h.and(!h.basic, p.upnpEnabled)}" />
+
+            <!-- Enable RPC -->
+            <com.ap.transmission.btc.views.CheckBoxView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:visibility="@{!h.basic}"
+                app:pref="@{K.ENABLE_RPC}"
+                app:text="@string/enable_rpc" />
+
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_gravity="fill_horizontal"
+                android:layout_marginLeft="10dp"
+                android:text="@string/rpc_port"
+                android:textStyle="bold"
+                android:visibility="@{p.rpcEnabled}" />
+
+            <EditText
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:gravity="right"
+                android:inputType="numberDecimal"
+                android:maxLength="5"
+                android:minEms="2"
+                android:visibility="@{p.rpcEnabled}"
+                app:pref="@{K.RPC_PORT}" />
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_columnSpan="2"
+                android:layout_marginLeft="10dp"
+                android:background="@drawable/separator"
+                android:visibility="@{p.rpcEnabled}" />
+
+            <!-- Authentication required -->
+            <com.ap.transmission.btc.views.CheckBoxView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_marginLeft="10dp"
+                android:visibility="@{p.rpcEnabled}"
+                app:pref="@{K.ENABLE_RPC_AUTH}"
+                app:text="@string/auth_required" />
+
+            <!-- Username -->
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_gravity="fill_horizontal"
+                android:layout_marginLeft="10dp"
+                android:text="@string/username"
+                android:textStyle="bold"
+                android:visibility="@{h.and(p.rpcEnabled, p.rpcAuthEnabled)}" />
+
+            <EditText
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_gravity="fill_horizontal"
+                android:layout_marginLeft="10dp"
+                android:inputType="text"
+                android:maxLines="1"
+                android:visibility="@{h.and(p.rpcEnabled, p.rpcAuthEnabled)}"
+                app:pref="@{K.RPC_UNAME}" />
+
+            <!-- Password -->
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_gravity="fill_horizontal"
+                android:layout_marginLeft="10dp"
+                android:text="@string/password"
+                android:textStyle="bold"
+                android:visibility="@{h.and(p.rpcEnabled, p.rpcAuthEnabled)}" />
+
+            <EditText
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_gravity="fill_horizontal"
+                android:layout_marginLeft="10dp"
+                android:inputType="textPassword"
+                android:maxLines="1"
+                android:visibility="@{h.and(p.rpcEnabled, p.rpcAuthEnabled)}"
+                app:pref="@{K.RPC_PASSWD}" />
+
+            <!-- Enable RPC Whitelist -->
+            <com.ap.transmission.btc.views.CheckBoxView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_marginLeft="10dp"
+                android:visibility="@{p.rpcEnabled}"
+                app:pref="@{K.ENABLE_RPC_WHITELIST}"
+                app:text="@string/enable_rpc_whitelist" />
+
+            <EditText
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_gravity="fill_horizontal"
+                android:layout_marginLeft="10dp"
+                android:inputType="text"
+                android:maxLines="1"
+                android:visibility="@{h.and(p.rpcEnabled, p.rpcWhitelistEnabled)}"
+                app:pref="@{K.RPC_WHITELIST}" />
+        </GridLayout>
+    </ScrollView>
+</layout>

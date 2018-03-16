@@ -1,0 +1,82 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="com.ap.transmission.btc.R" />
+
+        <import type="com.ap.transmission.btc.Prefs.K" />
+
+        <variable
+            name="p"
+            type="com.ap.transmission.btc.Prefs" />
+
+        <variable
+            name="h"
+            type="com.ap.transmission.btc.BindingHelper" />
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp">
+
+        <TextView
+            android:id="@+id/add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="5dp"
+            android:background="@drawable/focusable"
+            android:clickable="true"
+            android:drawablePadding="5dp"
+            android:focusable="true"
+            android:onClick="@{()-> h.addWatchDir()}"
+            android:text="@string/add_watch_dir"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:icon="@{R.drawable.add}"
+            tools:ignore="RtlHardcoded" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/add">
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="fill_horizontal"
+                    android:text="@string/watch_interval"
+                    android:textStyle="bold"
+                    android:visibility="@{p.watchDirEnabled}" />
+
+                <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:inputType="numberDecimal"
+                    android:gravity="right"
+                    android:minEms="2"
+                    android:visibility="@{p.watchDirEnabled}"
+                    app:pref="@{K.WATCH_INTERVAL}" />
+
+                <com.ap.transmission.btc.views.WatchView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_columnSpan="2"
+                    android:layout_gravity="fill_horizontal"
+                    android:layout_marginTop="5dp"
+                    app:prefs="@{p}" />
+
+            </GridLayout>
+        </ScrollView>
+
+    </RelativeLayout>
+</layout>

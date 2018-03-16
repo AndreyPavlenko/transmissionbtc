@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/menu"
+        android:icon="@drawable/menu"
+        android:orderInCategory="101"
+        app:showAsAction="always">
+        <menu>
+            <item
+                android:id="@+id/add_file"
+                android:icon="@drawable/add_file"
+                android:title="@string/menu_add_file"
+                app:showAsAction="always|withText" />
+            <item
+                android:id="@+id/add_link"
+                android:icon="@drawable/add_link"
+                android:title="@string/menu_add_link"
+                app:showAsAction="always|withText" />
+            <item
+                android:id="@+id/suspend"
+                android:icon="@drawable/suspend"
+                android:title="@string/menu_suspend"
+                app:showAsAction="always|withText" />
+            <item
+                android:id="@+id/resume"
+                android:icon="@drawable/resume"
+                android:title="@string/menu_resume"
+                app:showAsAction="always|withText" />
+            <item
+                android:id="@+id/stop"
+                android:icon="@drawable/stop"
+                android:title="@string/stop"
+                app:showAsAction="always|withText" />
+            <item
+                android:id="@+id/start"
+                android:icon="@drawable/start"
+                android:title="@string/start"
+                app:showAsAction="always|withText" />
+        </menu>
+    </item>
+</menu>

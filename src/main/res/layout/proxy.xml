@@ -1,0 +1,157 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="com.ap.transmission.btc.Prefs" />
+
+        <import type="com.ap.transmission.btc.Prefs.K" />
+
+        <import type="com.ap.transmission.btc.BindingHelper" />
+
+        <variable
+            name="p"
+            type="Prefs" />
+
+        <variable
+            name="h"
+            type="com.ap.transmission.btc.BindingHelper" />
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- Enable Proxy -->
+        <CheckBox
+            android:id="@+id/enable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:checked="@{p.proxyEnabled}"
+            android:text="@string/proxy_enable"
+            app:pref="@{K.ENABLE_PROXY}"
+            tools:ignore="RtlHardcoded" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/enable"
+            android:fillViewport="true"
+            android:visibility="@{p.proxyEnabled}">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp">
+
+                <!-- ALL -->
+                <TextView
+                    android:id="@+id/all_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBottom="@id/all_text"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignRight="@id/no_label"
+                    android:layout_alignTop="@id/all_text"
+                    android:gravity="fill|left"
+                    android:text="@string/proxy_all"
+                    android:textStyle="bold"
+                    tools:ignore="RtlHardcoded" />
+
+                <EditText
+                    android:id="@+id/all_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_toRightOf="@id/all_label"
+                    android:hint="@string/proxy_all_hint"
+                    android:inputType="textUri"
+                    android:singleLine="true"
+                    app:pref="@{K.PROXY_ALL}"
+                    tools:ignore="RtlHardcoded" />
+
+                <!-- HTTP -->
+                <TextView
+                    android:id="@+id/http_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBottom="@id/http_text"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignRight="@id/no_label"
+                    android:layout_alignTop="@id/http_text"
+                    android:layout_below="@id/all_label"
+                    android:gravity="fill|left"
+                    android:text="@string/proxy_http"
+                    android:textStyle="bold"
+                    tools:ignore="RtlHardcoded" />
+
+                <EditText
+                    android:id="@+id/http_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/all_text"
+                    android:layout_toRightOf="@id/http_label"
+                    android:hint="@string/proxy_http_hint"
+                    android:inputType="textUri"
+                    android:singleLine="true"
+                    app:pref="@{K.PROXY_HTTP}"
+                    tools:ignore="RtlHardcoded" />
+
+                <!-- HTTPS -->
+                <TextView
+                    android:id="@+id/https_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBottom="@id/https_text"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignRight="@id/no_label"
+                    android:layout_alignTop="@id/https_text"
+                    android:gravity="fill|left"
+                    android:text="@string/proxy_https"
+                    android:textStyle="bold"
+                    tools:ignore="RtlHardcoded" />
+
+                <EditText
+                    android:id="@+id/https_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/http_text"
+                    android:layout_toRightOf="@id/https_label"
+                    android:hint="@string/proxy_https_hint"
+                    android:inputType="textUri"
+                    android:singleLine="true"
+                    app:pref="@{K.PROXY_HTTPS}"
+                    tools:ignore="RtlHardcoded" />
+
+                <!-- NO_PROXY -->
+                <TextView
+                    android:id="@+id/no_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBottom="@id/no_text"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignTop="@id/no_text"
+                    android:gravity="fill|left"
+                    android:text="@string/proxy_no"
+                    android:textAlignment="gravity"
+                    android:textStyle="bold"
+                    tools:ignore="RtlHardcoded" />
+
+                <EditText
+                    android:id="@+id/no_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/https_text"
+                    android:layout_toRightOf="@id/no_label"
+                    android:hint="@string/proxy_no_hint"
+                    android:inputType="textUri"
+                    android:singleLine="true"
+                    app:pref="@{K.PROXY_NO}"
+                    tools:ignore="RtlHardcoded" />
+            </RelativeLayout>
+        </ScrollView>
+    </RelativeLayout>
+</layout>

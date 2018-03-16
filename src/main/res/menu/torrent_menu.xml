@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/expand"
+        android:icon="@drawable/expand2"
+        android:title="@string/menu_expand" />
+    <item
+        android:id="@+id/collapse"
+        android:icon="@drawable/collapse2"
+        android:title="@string/menu_collapse" />
+    <item
+        android:id="@+id/play"
+        android:icon="@drawable/play2"
+        android:title="@string/menu_play" />
+    <item
+        android:id="@+id/pause"
+        android:icon="@drawable/pause"
+        android:title="@string/menu_pause" />
+    <item
+        android:id="@+id/resume"
+        android:icon="@drawable/resume"
+        android:title="@string/menu_resume" />
+    <item
+        android:id="@+id/verify"
+        android:icon="@drawable/verify"
+        android:title="@string/menu_verify" />
+    <item
+        android:id="@+id/set_location"
+        android:icon="@drawable/move"
+        android:title="@string/menu_set_location" />
+    <item
+        android:id="@+id/remove"
+        android:icon="@drawable/remove"
+        android:title="@string/menu_remove" />
+    <item
+        android:id="@+id/remove_and_trash"
+        android:icon="@drawable/trash2"
+        android:title="@string/menu_remove_and_trash" />
+
+</menu>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="error">#ffcd2626</color>
+    <color name="controlHighlight">#c0f7ff</color>
+    <color name="controlHighlight2">#dcf7fa</color>
+    <color name="border">#dfdcdc</color>
+    <color name="progress">#fabe00</color>
+    <color name="progress_done">#009688</color>
+    <color name="progress_pause">#000000</color>
+</resources>
