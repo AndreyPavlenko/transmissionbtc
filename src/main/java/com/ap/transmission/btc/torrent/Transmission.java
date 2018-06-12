@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -64,6 +65,7 @@ public class Transmission {
   private List<Watcher> watchers;
   private PowerLock powerLock;
   private SsdpServer ssdpServer;
+  private volatile List<Long> semaphores;
   private volatile HttpServer httpServer;
   private volatile TorrentFs torrentFs;
   private volatile ExecutorService executor;
@@ -292,9 +294,10 @@ public class Transmission {
       session = STATE_STOPPING;
 
       try {
+        if (semaphores != null) for (Long sem : semaphores) Native.semPost(sem);
+        if (watchers != null) for (Watcher w : watchers) w.stopWatching();
         ConnectivityChangeReceiver.unregister(getContext());
         Native.transmissionSetRpcCallbacks(null, null, null, null);
-        if (watchers != null) for (Watcher w : watchers) w.stopWatching();
         Utils.close(httpServer, ssdpServer);
         stopExecutor();
         stopSheduler();
@@ -311,6 +314,7 @@ public class Transmission {
         watchers = null;
         executor = null;
         scheduler = null;
+        semaphores = null;
         suspended = 0;
         wakeUnlock();
       }
@@ -430,17 +434,20 @@ public class Transmission {
   }
 
   private void torrentAddedOrChanged() {
+    debug(TAG, "torrentAddedOrChanged()");
     TorrentFs fs = torrentFs;
     if (fs != null) fs.reset();
     wakeLock();
   }
 
   private void torrentRemoved() {
+    debug(TAG, "torrentAddedOrChanged()");
     TorrentFs fs = torrentFs;
     if (fs != null) fs.reset();
   }
 
   private void sessionChanged() {
+    debug(TAG, "torrentAddedOrChanged()");
     readLock().lock();
     try {
       if (!isRunning()) return;
@@ -464,23 +471,49 @@ public class Transmission {
     return new Promise<Void>() {
       private final long sem = Native.semCreate();
 
+      {
+        List<Long> semaphores = Transmission.this.semaphores;
+
+        if (semaphores == null) {
+          writeLock().lock();
+          try {
+            if ((semaphores = Transmission.this.semaphores) == null) {
+              Transmission.this.semaphores = semaphores = new Vector<>();
+            }
+          } finally {
+            writeLock().unlock();
+          }
+        }
+
+        semaphores.add(sem);
+      }
+
       @Override
       public Void get() throws Throwable {
-        checkRunning();
-        TorrentFs fs = torrentFs;
-        if (fs != null) fs.reset();
-        Native.torrentMagnetToTorrentFile(session, sem, magnetLink.toString(),
-            destTorrentPath.getAbsolutePath(), timeout, enqueue);
-        return null;
+        readLock().lock();
+        try {
+          checkRunning();
+          TorrentFs fs = torrentFs;
+          if (fs != null) fs.reset();
+          Native.torrentMagnetToTorrentFile(session, sem, magnetLink.toString(),
+              destTorrentPath.getAbsolutePath(), timeout, enqueue);
+          return null;
+        } finally {
+          readLock().unlock();
+        }
       }
 
       @Override
       public synchronized void cancel() {
         Native.semPost(sem);
+        List<Long> semaphores = Transmission.this.semaphores;
+        if (semaphores != null) semaphores.remove(sem);
       }
 
       @Override
       protected void finalize() {
+        List<Long> semaphores = Transmission.this.semaphores;
+        if (semaphores != null) semaphores.remove(sem);
         Native.semDestroy(sem);
       }
     };

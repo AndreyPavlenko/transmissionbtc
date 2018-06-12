@@ -173,6 +173,7 @@ public class TorrentFile implements TorrentItem {
 
         @Override
         public Void call() throws Exception {
+          readLock().lock();
           try {
             Torrent tor = getTorrent();
             Native.torrentSetDnd(tor.getSessionId(), tor.getTorrentId(), new int[]{getIndex()}, dnd);
@@ -180,6 +181,8 @@ public class TorrentFile implements TorrentItem {
           } catch (NoSuchTorrentException ex) {
             getFs().reportNoSuchTorrent(ex);
             throw ex;
+          } finally {
+            readLock().unlock();
           }
         }
       });

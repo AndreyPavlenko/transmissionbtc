@@ -117,13 +117,17 @@ public class TorrentDir implements TorrentItemContainer {
 
         @Override
         public Void call() throws Exception {
+          tor.readLock().lock();
           try {
+            tor.checkValid();
             getTorrent().checkValid();
             Native.torrentSetDnd(tor.getSessionId(), tor.getTorrentId(), indexes, dnd);
             return null;
           } catch (NoSuchTorrentException ex) {
             getFs().reportNoSuchTorrent(ex);
             throw ex;
+          } finally {
+            tor.readLock().unlock();
           }
         }
       });

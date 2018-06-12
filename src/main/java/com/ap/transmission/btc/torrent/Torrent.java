@@ -142,15 +142,15 @@ public class Torrent implements TorrentItemContainer {
     return (List) index(true);
   }
 
-  public boolean preloadIndex(int timeout) throws IllegalStateException {
+  public boolean preloadIndex(int timeout) {
     return preloadIndex(timeout, false);
   }
 
-  public boolean preloadIndexAndFileStat(int timeout) throws IllegalStateException {
+  public boolean preloadIndexAndFileStat(int timeout) {
     return preloadIndex(timeout, true);
   }
 
-  private boolean preloadIndex(int timeout, final boolean fileStat) throws IllegalStateException {
+  private boolean preloadIndex(int timeout, final boolean fileStat) {
     List<TorrentFile> files = fileIndex;
 
     if (files != null) {
@@ -187,6 +187,9 @@ public class Torrent implements TorrentItemContainer {
       dirIndex = l[1].isEmpty() ? null : l[1];
       return true;
     } catch (InterruptedException ex) {
+      return false;
+    } catch (IllegalStateException ex) {
+      Utils.err(getClass().getName(), ex, "preloadIndex() failed");
       return false;
     } catch (ExecutionException ex) {
       Throwable t = ex.getCause();
@@ -338,21 +341,25 @@ public class Torrent implements TorrentItemContainer {
     readLock().lock();
     try {
       checkValid();
+      fs.removed(Torrent.this);
       return getTransmission().getExecutor().submit(new Callable<Void>() {
 
         @Override
         public Void call() throws Exception {
+          readLock().lock();
           try {
+            checkValid();
             Native.torrentRemove(getSessionId(), getTorrentId(), removeLocalData);
             return null;
           } catch (NoSuchTorrentException ex) {
             getFs().reportNoSuchTorrent(ex);
             throw ex;
+          } finally {
+            readLock().unlock();
           }
         }
       });
     } finally {
-      fs.removed(Torrent.this);
       readLock().unlock();
     }
   }
@@ -365,12 +372,16 @@ public class Torrent implements TorrentItemContainer {
 
         @Override
         public Void call() throws Exception {
+          readLock().lock();
           try {
+            checkValid();
             Native.torrentStop(getSessionId(), getTorrentId());
             return null;
           } catch (NoSuchTorrentException ex) {
             getFs().reportNoSuchTorrent(ex);
             throw ex;
+          } finally {
+            readLock().unlock();
           }
         }
       });
@@ -387,12 +398,16 @@ public class Torrent implements TorrentItemContainer {
 
         @Override
         public Void call() throws Exception {
+          readLock().lock();
           try {
+            checkValid();
             Native.torrentStart(getSessionId(), getTorrentId());
             return null;
           } catch (NoSuchTorrentException ex) {
             getFs().reportNoSuchTorrent(ex);
             throw ex;
+          } finally {
+            readLock().unlock();
           }
         }
       });
@@ -409,12 +424,16 @@ public class Torrent implements TorrentItemContainer {
 
         @Override
         public Void call() throws Exception {
+          readLock().lock();
           try {
+            checkValid();
             Native.torrentVerify(getSessionId(), getTorrentId());
             return null;
           } catch (NoSuchTorrentException ex) {
             getFs().reportNoSuchTorrent(ex);
             throw ex;
+          } finally {
+            readLock().unlock();
           }
         }
       });
@@ -467,8 +486,10 @@ public class Torrent implements TorrentItemContainer {
     readLock().lock();
     try {
       checkValid();
-      if (isDebugEnabled())
-        debug(getClass().getName(), "Increasing priority of pieces: %d-%d", firstPiece, lastPiece);
+      if (isDebugEnabled()) {
+        debug(getClass().getName(), "Increasing priority of pieces: %d-%d",
+            firstPiece, lastPiece);
+      }
       Native.torrentSetPiecesHiPri(getSessionId(), getTorrentId(), firstPiece, lastPiece);
     } finally {
       readLock().unlock();
@@ -483,12 +504,16 @@ public class Torrent implements TorrentItemContainer {
 
         @Override
         public Void call() throws Exception {
+          readLock().lock();
           try {
+            checkValid();
             Native.torrentSetLocation(getSessionId(), getTorrentId(), dir.getAbsolutePath());
             return null;
           } catch (NoSuchTorrentException ex) {
             getFs().reportNoSuchTorrent(ex);
             throw ex;
+          } finally {
+            readLock().unlock();
           }
         }
       });
