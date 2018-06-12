@@ -117,7 +117,7 @@ public class StorageAccess {
       }
     }
 
-    err(TAG, "Failed to open file descriptor: %s", path);
+    if (create) err(TAG, "Failed to create file: %s", path);
     return -1;
   }
 

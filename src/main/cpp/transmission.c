@@ -3,6 +3,7 @@
 #include "transmission-private.h"
 #include <libtransmission/version.h>
 #include <libtransmission/variant.h>
+#include <libtransmission/file.h>
 
 #define MEM_K 1024
 #define MEM_K_STR "KiB"
@@ -118,11 +119,12 @@ Java_com_ap_transmission_btc_Native_transmissionStart(
 
   if (loadConfig) {
     if (!tr_sessionLoadSettings(&settings, configDir, "transmissionbtc")) {
-      (*env)->ReleaseStringUTFChars(env, jconfigDir, configDir);
-      tr_variantFree(&settings);
-      throwIOEX(env, "Failed to load config");
+      logErr("Failed to load config: %s/settings.json", configDir);
+      loadConfig = false;
     }
-  } else {
+  }
+
+  if (!loadConfig) {
     // Set defaults
     tr_variantDictAddBool(&settings, TR_KEY_rename_partial_files, false);
     tr_variantDictAddBool(&settings, TR_KEY_peer_port_random_on_start, true);

@@ -1,6 +1,5 @@
 package com.ap.transmission.btc;
 
-import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -99,8 +98,9 @@ public class BindingHelper implements OnSharedPreferenceChangeListener, Runnable
 
     try {
       activity.startActivity(i);
-    } catch (ActivityNotFoundException ex) {
-      Utils.showErr(dataBinding.getRoot(), R.string.err_browser_not_found);
+    } catch (Exception ex) {
+      Utils.err(getClass().getName(), ex, "Failed to open web browser");
+      Utils.showErr(dataBinding.getRoot(), R.string.err_failed_to_open_url, uri);
     }
   }
 
