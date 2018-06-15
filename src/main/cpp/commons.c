@@ -5,7 +5,7 @@
 jint throw(const char *file, int line, JNIEnv *env, const char *className,
            const char *format, ...) {
   int len;
-  char msg[1024];
+  char msg[256];
   char *fmt = (char *) format;
 
 #ifndef NDEBUG
@@ -22,7 +22,13 @@ jint throw(const char *file, int line, JNIEnv *env, const char *className,
 
   jclass c = (*env)->FindClass(env, className);
   if (c == NULL) (*env)->FindClass(env, "java/lang/Error");
-  (*env)->ThrowNew(env, c, fmt);
+
+  if ((*env)->ExceptionCheck(env)) {
+    logErr("Exception: %s", fmt);
+  } else {
+    (*env)->ThrowNew(env, c, fmt);
+  }
+
   return 0;
 }
 

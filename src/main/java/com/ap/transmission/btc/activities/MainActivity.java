@@ -222,6 +222,7 @@ public class MainActivity extends ActivityBase {
       menu.getItem(3).setVisible(false); // Resume
       menu.getItem(4).setVisible(false); // Stop
       menu.getItem(5).setVisible(true); // Start
+      menu.getItem(5).setEnabled(!bindingHelper.isServiceStarting());
     } else {
       if (bindingHelper.isSuspended()) {
         menu.getItem(2).setVisible(false); // Suspend
@@ -234,6 +235,7 @@ public class MainActivity extends ActivityBase {
       menu.getItem(0).setVisible(true); // Add file
       menu.getItem(1).setVisible(true); // Add link
       menu.getItem(4).setVisible(true); // Stop
+      menu.getItem(4).setEnabled(!bindingHelper.isServiceStarting());
       menu.getItem(5).setVisible(false); // Start
     }
   }

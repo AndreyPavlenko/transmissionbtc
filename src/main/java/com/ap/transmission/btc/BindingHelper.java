@@ -21,7 +21,7 @@ import java.io.IOException;
 public class BindingHelper implements OnSharedPreferenceChangeListener, Runnable {
   private final ActivityBase activity;
   private final ViewDataBinding dataBinding;
-  private boolean isServiceRunning = TransmissionService.isRunning();
+  private byte isServiceRunning = TransmissionService.isRunning() ? (byte) 1 : 0;
 
   public BindingHelper(ActivityBase activity, ViewDataBinding dataBinding) {
     this.activity = activity;
@@ -52,7 +52,11 @@ public class BindingHelper implements OnSharedPreferenceChangeListener, Runnable
   }
 
   public boolean isServiceRunning() {
-    return isServiceRunning;
+    return isServiceRunning == 1;
+  }
+
+  public boolean isServiceStarting() {
+    return isServiceRunning == 2;
   }
 
   public boolean isSuspended() {
@@ -64,23 +68,24 @@ public class BindingHelper implements OnSharedPreferenceChangeListener, Runnable
   }
 
   public void startStopService(final View... disable) {
-    final boolean starting = !isServiceRunning;
+    final boolean running = isServiceRunning();
     for (View v : disable) v.setEnabled(false);
     Runnable callback = new Runnable() {
       @Override
       public void run() {
         for (View v : disable) v.setEnabled(true);
-        isServiceRunning = TransmissionService.isRunning();
+        isServiceRunning = TransmissionService.isRunning() ? (byte) 1 : 0;
         invalidate();
 
-        if (starting && !isServiceRunning) {
+        if (!running && !isServiceRunning()) {
           Utils.showErr(disable[0], R.string.err_failed_to_start_transmission);
         }
       }
     };
 
-    if (isServiceRunning()) {
-      isServiceRunning = false;
+    isServiceRunning = 2;
+
+    if (running) {
       TransmissionService.stop(activity, callback);
     } else {
       TransmissionService.start(activity, callback);
@@ -136,7 +141,7 @@ public class BindingHelper implements OnSharedPreferenceChangeListener, Runnable
 
   @Override
   public void run() {
-    isServiceRunning = TransmissionService.isRunning();
+    isServiceRunning = TransmissionService.isRunning() ? (byte) 1 : 0;
     dataBinding.invalidateAll();
   }
 }

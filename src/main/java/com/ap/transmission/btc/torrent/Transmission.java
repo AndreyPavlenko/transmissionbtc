@@ -134,8 +134,10 @@ public class Transmission {
     if (isRunning()) return;
 
     writeLock().lock();
+    if (isRunning()) return;
     session = STATE_STARTING;
     boolean ok = false;
+    getExecutor(); // Start executor
 
     try {
       Context ctx = getContext();
@@ -377,7 +379,7 @@ public class Transmission {
     return suspended == 2;
   }
 
-  public boolean hasDownloadingTorrents() {
+  private boolean hasDownloadingTorrents() {
     readLock().lock();
     try {
       return isRunning() && Native.transmissionHasDownloadingTorrents(session);

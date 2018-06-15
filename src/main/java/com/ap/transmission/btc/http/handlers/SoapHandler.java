@@ -24,7 +24,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import static com.ap.transmission.btc.Utils.UTF8;
-import static com.ap.transmission.btc.Utils.isDebugEnabled;
 import static com.ap.transmission.btc.Utils.readXml;
 import static com.ap.transmission.btc.Utils.writeXml;
 
@@ -192,5 +191,9 @@ public class SoapHandler implements RequestHandler {
       OutputStream out = responseOk("text/xml; charset=\"utf-8\"", buf.remaining(), false);
       out.write(buf.array(), buf.position(), buf.remaining());
     }
+  }
+
+  private static boolean isDebugEnabled() {
+    return false;
   }
 }
