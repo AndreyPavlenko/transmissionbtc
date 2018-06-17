@@ -60,7 +60,7 @@ public class TransmissionService extends Service {
     }
 
     if (runNow) {
-      callback.run();
+      if (callback != null) callback.run();
     } else {
       Intent i = new Intent(context, TransmissionService.class);
       if (delay > 0) i.putExtra(DELAY, delay);
@@ -83,7 +83,7 @@ public class TransmissionService extends Service {
     }
 
     if (runNow) {
-      callback.run();
+      if (callback != null) callback.run();
     } else {
       context.stopService(new Intent(context, TransmissionService.class));
     }

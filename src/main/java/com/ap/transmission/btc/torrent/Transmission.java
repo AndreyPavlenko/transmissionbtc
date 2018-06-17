@@ -379,7 +379,7 @@ public class Transmission {
     return suspended == 2;
   }
 
-  private boolean hasDownloadingTorrents() {
+  public boolean hasDownloadingTorrents() {
     readLock().lock();
     try {
       return isRunning() && Native.transmissionHasDownloadingTorrents(session);
@@ -546,7 +546,6 @@ public class Transmission {
       writeLock().lock();
       try {
         if ((exec = executor) == null) {
-          checkRunning();
           executor = exec = new ThreadPoolExecutor(0,
               30, 60L, TimeUnit.SECONDS,
               new SynchronousQueue<Runnable>());

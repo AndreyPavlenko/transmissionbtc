@@ -130,6 +130,7 @@ public class TorrentFile implements TorrentItem {
     long[] s = stat(false);
     if (complete(s)) return 100;
     if (update) s = stat(true);
+    if (complete(s)) return 100;
 
     long first = s[3];
     long last = s[4];
