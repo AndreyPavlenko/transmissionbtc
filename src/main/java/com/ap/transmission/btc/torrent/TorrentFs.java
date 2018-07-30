@@ -158,10 +158,10 @@ public class TorrentFs implements TorrentItemContainer {
         for (Torrent t : torrents) {
           if (t.getTorrentId() == s[i]) {
             TorrentStat ts = t.getStat();
-            if (ts == null) t.setStat(ts = new TorrentStat(stat, i, null));
-            else ts.update(stat, i, null);
+            if (ts == null) t.setStat(ts = new TorrentStat(s, i, null));
+            else ts.update(s, i, null);
             if (ts.getStatus() == ERROR)
-              ts.update(stat, i, torrentGetError(sid, t.getTorrentId()));
+              ts.update(s, i, torrentGetError(sid, t.getTorrentId()));
             break;
           }
         }
@@ -243,13 +243,13 @@ public class TorrentFs implements TorrentItemContainer {
     return getTransmission().readLock();
   }
 
-  void checkValid() throws IllegalStateException {
+  boolean isValid() {
     Transmission tr = getTransmission();
-    if (sessionId == tr.getSession()) {
-      tr.checkRunning();
-    } else {
-      throw new IllegalStateException("Session is not valid");
-    }
+    return (sessionId == tr.getSession()) && tr.isRunning();
+  }
+
+  void checkValid() throws IllegalStateException {
+    if (!isValid()) throw new IllegalStateException("Session is not valid");
   }
 
   private static boolean isHashString(String s) {

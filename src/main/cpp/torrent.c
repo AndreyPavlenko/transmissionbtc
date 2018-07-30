@@ -620,13 +620,14 @@ static void *torrentGetFileStat(tr_session *session, void *data, Err *err) {
 JNIEXPORT jbyteArray JNICALL
 Java_com_ap_transmission_btc_Native_torrentGetFileStat(
     JNIEnv *env, jclass __unused c, jlong jsession, jint torrentId, jint fileIdx, jbyteArray stat) {
-  FileStatData d = {torrentId, fileIdx};
+  FileStatData d = {.torrentId= torrentId, .fileIdx = fileIdx, .bitFields = NULL};
   if (stat != NULL) d.bitFields = (*env)->GetLongArrayElements(env, stat, 0);
   runInTransmissionThreadEx(env, jsession, torrentGetFileStat, &d);
 
   if (stat == NULL) {
     stat = (*env)->NewLongArray(env, d.bitFieldsLen);
     (*env)->SetLongArrayRegion(env, stat, 0, d.bitFieldsLen, d.bitFields);
+    free(d.bitFields);
   } else {
     (*env)->ReleaseLongArrayElements(env, stat, d.bitFields, 0);
   }

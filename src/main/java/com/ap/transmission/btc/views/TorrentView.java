@@ -39,6 +39,7 @@ import com.ap.transmission.btc.Utils;
 import com.ap.transmission.btc.activities.ActivityBase;
 import com.ap.transmission.btc.activities.ActivityResultHandler;
 import com.ap.transmission.btc.activities.SelectFileActivity;
+import com.ap.transmission.btc.func.Consumer;
 import com.ap.transmission.btc.torrent.NoSuchTorrentException;
 import com.ap.transmission.btc.torrent.Torrent;
 import com.ap.transmission.btc.torrent.TorrentDir;
@@ -316,7 +317,8 @@ public class TorrentView extends RelativeLayout
     int count = content.getChildCount();
 
     for (int i = 0; i < count; i++) {
-      ((ItemView) content.getChildAt(i)).update();
+      View v = content.getChildAt(i);
+      if (v instanceof ItemView) ((ItemView) v).update();
     }
   }
 
@@ -383,32 +385,42 @@ public class TorrentView extends RelativeLayout
     }
 
     if (content.getChildCount() == 0) {
-      if (!torrent.preloadIndexAndFileStat(3)) return;
-      List<TorrentItem> ls = sortByName(torrent.ls(), false);
-
-      if (ls.isEmpty()) {
-        content.setVisibility(GONE);
-        return;
-      }
-
-      LayoutInflater infl = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-      int margin = Utils.toPx(10);
-      int padding = Utils.toPx(5);
-      Context ctx = getContext();
-
-      for (TorrentItem i : ls) {
-        View v;
-        if (i instanceof TorrentFile) v = new FileView(ctx, (TorrentFile) i, infl);
-        else v = new DirView(ctx, (TorrentDir) i, infl, margin, padding);
-        content.addView(v);
-        MarginLayoutParams lp = (MarginLayoutParams) v.getLayoutParams();
-        lp.setMargins(margin, 0, 0, 0);
-        v.setPadding(0, padding, 0, 0);
-      }
+      content.addView(new ProgressBar(getContext()));
+      torrent.ls(new Consumer<List<TorrentItem>>() {
+        @Override
+        public void accept(List<TorrentItem> ls) {
+          setContent(getContent(), ls);
+          updateContent();
+        }
+      });
     }
 
     content.setVisibility(VISIBLE);
     updateContent();
+  }
+
+  private void setContent(LinearLayout content, List<TorrentItem> ls) {
+    content.removeAllViews();
+
+    if ((ls == null) || ls.isEmpty()) {
+      content.setVisibility(GONE);
+      return;
+    }
+
+    LayoutInflater infl = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    int margin = Utils.toPx(10);
+    int padding = Utils.toPx(5);
+    Context ctx = getContext();
+
+    for (TorrentItem i : ls) {
+      View v;
+      if (i instanceof TorrentFile) v = new FileView(ctx, (TorrentFile) i, infl);
+      else v = new DirView(ctx, (TorrentDir) i, infl, margin, padding);
+      content.addView(v);
+      MarginLayoutParams lp = (MarginLayoutParams) v.getLayoutParams();
+      lp.setMargins(margin, 0, 0, 0);
+      v.setPadding(0, padding, 0, 0);
+    }
   }
 
   private void remove(boolean removeLocalData) {

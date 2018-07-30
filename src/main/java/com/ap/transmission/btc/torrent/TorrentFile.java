@@ -446,7 +446,7 @@ public class TorrentFile implements TorrentItem {
         checkValid();
         Torrent tor = getTorrent();
         s = Native.torrentGetFileStat(tor.getSessionId(), tor.getTorrentId(), getIndex(), stat);
-        stat = complete(s) ? Arrays.copyOf(s, 6) : s;
+        stat = s = complete(s) ? Arrays.copyOf(s, 6) : s;
       } finally {
         readLock().unlock();
       }

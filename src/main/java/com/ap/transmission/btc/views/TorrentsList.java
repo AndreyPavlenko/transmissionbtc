@@ -3,6 +3,7 @@ package com.ap.transmission.btc.views;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.design.widget.TabLayout;
 import android.util.AttributeSet;
 import android.widget.LinearLayout;
@@ -22,6 +23,7 @@ import com.ap.transmission.btc.torrent.Transmission;
 import java.util.Collections;
 import java.util.List;
 
+import static android.os.AsyncTask.Status.FINISHED;
 import static com.ap.transmission.btc.Utils.getActivity;
 
 /**
@@ -60,15 +62,23 @@ public class TorrentsList extends LinearLayout {
         updateList();
       }
     } else {
-      if (getChildCount() == 0) addView(new ProgressBar(getContext()));
-      update = new UpdateTask(new Consumer<List<Torrent>>() {
+      final UpdateTask upd = update = new UpdateTask(new Consumer<List<Torrent>>() {
         @Override
         public void accept(List<Torrent> torrents) {
           update = null;
           updateList(torrents);
         }
       });
-      update.executeOnExecutor(tr.getExecutor(), tr);
+      upd.executeOnExecutor(tr.getExecutor(), tr);
+
+      if (getChildCount() == 0) {
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+          @Override
+          public void run() {
+            if (upd.getStatus() != FINISHED) addView(new ProgressBar(getContext()));
+          }
+        }, 1000);
+      }
     }
   }
 

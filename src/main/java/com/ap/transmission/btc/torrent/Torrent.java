@@ -1,12 +1,15 @@
 package com.ap.transmission.btc.torrent;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.view.View;
 
 import com.ap.transmission.btc.Native;
 import com.ap.transmission.btc.R;
 import com.ap.transmission.btc.Utils;
+import com.ap.transmission.btc.func.Consumer;
 import com.ap.transmission.btc.http.HttpServer;
 import com.ap.transmission.btc.http.handlers.torrent.PlaylistHandler;
 
@@ -49,26 +52,52 @@ public class Torrent implements TorrentItemContainer {
     this.name = name;
   }
 
+  @SuppressWarnings("unchecked")
+  @SuppressLint("StaticFieldLeak")
+  public void ls(final Consumer<List<TorrentItem>> consumer) {
+    new AsyncTask<Void, Integer, List<TorrentItem>>() {
+      @Override
+      protected List<TorrentItem> doInBackground(Void... voids) {
+        try {
+          preloadIndex(true);
+        } catch (NoSuchTorrentException ex) {
+          getFs().reportNoSuchTorrent(ex);
+        }
+
+        return ls();
+      }
+
+      @Override
+      protected void onPostExecute(List<TorrentItem> ls) {
+        consumer.accept(ls);
+      }
+    }.execute((Void) null);
+  }
+
   @Override
   public List<TorrentItem> ls() {
     try {
       List<TorrentItem> dirs = index(false);
       List<TorrentItem> files = index(true);
-      List<TorrentItem> ls = new ArrayList<>(files.size());
-
-      for (TorrentItem i : dirs) {
-        if (i.getParent() == this) ls.add(i);
-      }
-
-      for (TorrentItem i : files) {
-        if (i.getParent() == this) ls.add(i);
-      }
-
-      return ls;
+      return ls(dirs, files);
     } catch (NoSuchTorrentException ex) {
       getFs().reportNoSuchTorrent(ex);
       return Collections.emptyList();
     }
+  }
+
+  private List<TorrentItem> ls(List<TorrentItem> dirs, List<TorrentItem> files) {
+    List<TorrentItem> ls = new ArrayList<>(files.size());
+
+    for (TorrentItem i : dirs) {
+      if (i.getParent() == this) ls.add(i);
+    }
+
+    for (TorrentItem i : files) {
+      if (i.getParent() == this) ls.add(i);
+    }
+
+    return ls;
   }
 
   public boolean hasFiles() throws IllegalStateException, NoSuchTorrentException {
@@ -173,14 +202,12 @@ public class Torrent implements TorrentItemContainer {
       Future<List[]> f = getTransmission().getExecutor().submit(new Callable<List[]>() {
         @Override
         public List[] call() throws Exception {
-          List<TorrentFile> files = index(true);
-          List[] l = new List[]{files, index(false)};
-          if (fileStat) for (TorrentFile file : files) file.isDnd();
-          return l;
+          return preloadIndex(fileStat);
         }
       });
 
       List[] l = f.get(timeout, TimeUnit.SECONDS);
+      if (l == null) return false;
       //noinspection unchecked
       fileIndex = l[0].isEmpty() ? null : l[0];
       //noinspection unchecked
@@ -205,6 +232,19 @@ public class Torrent implements TorrentItemContainer {
     } catch (TimeoutException ex) {
       Utils.warn(getClass().getName(), "preloadIndex() timed out: timeout=%d seconds", timeout);
       return false;
+    } finally {
+      readLock().unlock();
+    }
+  }
+
+  private List[] preloadIndex(final boolean fileStat) throws NoSuchTorrentException {
+    readLock().lock();
+    try {
+      if(!getFs().isValid()) return null;
+      List<TorrentFile> files = index(true);
+      List[] l = new List[]{files, index(false)};
+      if (fileStat) for (TorrentFile file : files) file.isDnd();
+      return l;
     } finally {
       readLock().unlock();
     }
