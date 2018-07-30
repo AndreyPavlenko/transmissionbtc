@@ -187,7 +187,7 @@ public class TransmissionService extends Service {
 
       if (nmgr != null) {
         NotificationChannel nc = new NotificationChannel("TransmissionBTC",
-            "TransmissionBTC", NotificationManager.IMPORTANCE_DEFAULT);
+            "TransmissionBTC", NotificationManager.IMPORTANCE_LOW);
         nmgr.createNotificationChannel(nc);
         b.setChannelId("TransmissionBTC");
       }

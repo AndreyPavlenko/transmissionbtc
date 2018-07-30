@@ -89,7 +89,8 @@ public class MainActivity extends ActivityBase {
     });
 
     checkPermission(permission.INTERNET, permission.ACCESS_NETWORK_STATE,
-        permission.ACCESS_WIFI_STATE, permission.WRITE_EXTERNAL_STORAGE, permission.WAKE_LOCK);
+        permission.ACCESS_WIFI_STATE, permission.WRITE_EXTERNAL_STORAGE, permission.WAKE_LOCK,
+        permission.ACCESS_COARSE_LOCATION, permission.ACCESS_FINE_LOCATION);
     findViewById(R.id.button_start_stop).requestFocus();
   }
 

@@ -1,5 +1,5 @@
-def version = '1.2.14'
-def versionNum = 54
+def version = '1.2.15'
+def versionNum = 55
 def basic_version = '1.0.0'
 def basic_versionNum = 1
 
