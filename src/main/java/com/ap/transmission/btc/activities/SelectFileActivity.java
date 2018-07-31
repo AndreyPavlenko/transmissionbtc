@@ -3,6 +3,7 @@ package com.ap.transmission.btc.activities;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -50,6 +51,7 @@ import static android.os.Build.VERSION_CODES;
 import static android.os.Build.VERSION_CODES.KITKAT;
 import static android.os.Build.VERSION_CODES.LOLLIPOP;
 import static android.os.Build.VERSION_CODES.N;
+import static com.ap.transmission.btc.Utils.err;
 import static com.ap.transmission.btc.Utils.hasWritePerms;
 import static com.ap.transmission.btc.Utils.showErr;
 import static com.ap.transmission.btc.Utils.showMsg;
@@ -363,8 +365,12 @@ public class SelectFileActivity extends ListActivity {
 
           if (i != null) {
             i.setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-            startActivityForResult(i, req);
-            return true;
+            try {
+              startActivityForResult(i, req);
+              return true;
+            } catch (ActivityNotFoundException ex) {
+              err(getClass().getName(), ex, "Failed to request access");
+            }
           }
         }
       }

@@ -440,12 +440,13 @@ public class TorrentFile implements TorrentItem {
   private long[] stat(boolean force) throws IllegalStateException, NoSuchTorrentException {
     long[] s = stat;
 
-    if (force || (s == null)) {
+    if ((s == null) || (!complete(s) && force)) {
       readLock().lock();
       try {
         checkValid();
         Torrent tor = getTorrent();
-        s = Native.torrentGetFileStat(tor.getSessionId(), tor.getTorrentId(), getIndex(), stat);
+        if (s != null) s = new long[s.length];
+        s = Native.torrentGetFileStat(tor.getSessionId(), tor.getTorrentId(), getIndex(), s);
         stat = s = complete(s) ? Arrays.copyOf(s, 6) : s;
       } finally {
         readLock().unlock();
