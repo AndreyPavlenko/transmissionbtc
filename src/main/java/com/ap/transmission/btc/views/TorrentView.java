@@ -389,8 +389,12 @@ public class TorrentView extends RelativeLayout
       torrent.ls(new Consumer<List<TorrentItem>>() {
         @Override
         public void accept(List<TorrentItem> ls) {
-          setContent(getContent(), ls);
-          updateContent();
+          try {
+            setContent(getContent(), ls);
+            updateContent();
+          } catch (IllegalStateException ex) {
+            err(TorrentView.class.getName(), ex, "Failed to update content");
+          }
         }
       });
     }

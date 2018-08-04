@@ -29,6 +29,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Lock;
 
 import static com.ap.transmission.btc.Utils.debug;
+import static com.ap.transmission.btc.Utils.err;
 import static com.ap.transmission.btc.Utils.isDebugEnabled;
 import static com.ap.transmission.btc.Utils.showErr;
 
@@ -82,6 +83,9 @@ public class Torrent implements TorrentItemContainer {
       return ls(dirs, files);
     } catch (NoSuchTorrentException ex) {
       getFs().reportNoSuchTorrent(ex);
+      return Collections.emptyList();
+    } catch (IllegalStateException ex) {
+      err(getClass().getName(), ex, "ls() failed");
       return Collections.emptyList();
     }
   }

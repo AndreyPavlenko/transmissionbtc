@@ -95,6 +95,7 @@ public class Utils {
   private static final boolean isPro = BUILD_TYPE.endsWith("pro");
   private static final boolean isBasic = BUILD_TYPE.endsWith("basic");
   private static final boolean isDebugEnabled = BUILD_TYPE.startsWith("debug");
+  private static volatile InetAddress ifaddr;
 
   public static String getIPAddress(Context context) {
     InetAddress addr = getInterfaceAddress(context);
@@ -102,9 +103,11 @@ public class Utils {
   }
 
   public static InetAddress getInterfaceAddress(Context context) {
+    InetAddress result = ifaddr;
+    if(result != null) return result;
+
     Context ctx = context.getApplicationContext();
     ConnectivityManager cmgr = (ConnectivityManager) ctx.getSystemService(CONNECTIVITY_SERVICE);
-    InetAddress result = null;
 
     if (cmgr != null) {
       NetworkInfo inf = cmgr.getActiveNetworkInfo();
@@ -122,7 +125,7 @@ public class Utils {
       }
     }
 
-    if (result != null) return result;
+    if (result != null) return ifaddr = result;
     InetAddress ethResult = null;
 
     try {
@@ -156,7 +159,11 @@ public class Utils {
       Log.d(TAG, ex.getMessage(), ex);
     }
 
-    return (ethResult != null) ? ethResult : result;
+    return ifaddr = (ethResult != null) ? ethResult : result;
+  }
+
+  public static void resetInterfaceAddress() {
+    ifaddr = null;
   }
 
   @SuppressLint("WifiManagerPotentialLeak")
@@ -400,8 +407,6 @@ public class Utils {
           if (Arrays.equals(baos1.buf(), baos2.buf())) {
             debug(TAG, "Assets are already copied: %s", src);
             return;
-          } else {
-
           }
         } catch (IOException ex) {
           err(TAG, ex, "Failed to read asset %s", csFileName);

@@ -72,7 +72,7 @@ public class TorrentFs implements TorrentItemContainer {
 
       readLock().lock();
       try {
-        checkValid();
+        if (!isValid()) return Collections.emptyList();
         names = Native.transmissionListTorrentNames(getSessionId());
       } finally {
         readLock().unlock();

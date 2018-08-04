@@ -140,6 +140,11 @@ public class TorrentFile implements TorrentItem {
     for (int i = 0; i < count; i++) {
       int fieldIdx = (i / 64) + 6;
       int bitIdx = (i % 64);
+
+      if ((fieldIdx < 0) || (fieldIdx >= s.length)) {
+        throw new ArrayIndexOutOfBoundsException(Arrays.toString(s));
+      }
+
       long field = s[fieldIdx];
       if (bitSet(field, bitIdx)) completed++;
     }

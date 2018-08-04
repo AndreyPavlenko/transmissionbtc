@@ -57,8 +57,7 @@ public class SimpleHttpServer implements HttpServer {
 
       if (prefs.isUpnpEnabled()) {
         serverSocket = ss = new ServerSocket(prefs.getHttpServerPort());
-        String ip = Utils.getIPAddress(prefs.getContext());
-        hostName = (ip != null) ? ip : "localhost";
+        hostName = null;
       } else {
         InetAddress addr = InetAddress.getByAddress("localhost", new byte[]{127, 0, 0, 1});
         serverSocket = ss = new ServerSocket(0, 0, addr);
@@ -122,7 +121,10 @@ public class SimpleHttpServer implements HttpServer {
 
   @Override
   public String getHostName() {
-    return hostName;
+    String hn = hostName;
+    if (hn != null) return hn;
+    hn = Utils.getIPAddress(transmission.getPrefs().getContext());
+    return (hn != null) ? hn : "localhost";
   }
 
   @Override

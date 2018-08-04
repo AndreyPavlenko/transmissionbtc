@@ -16,7 +16,6 @@ import com.ap.transmission.btc.Utils;
 import com.ap.transmission.btc.func.Promise;
 import com.ap.transmission.btc.http.HttpServer;
 import com.ap.transmission.btc.http.SimpleHttpServer;
-import com.ap.transmission.btc.http.handlers.upnp.DescriptorHandler;
 import com.ap.transmission.btc.receivers.ConnectivityChangeReceiver;
 import com.ap.transmission.btc.services.TransmissionService;
 import com.ap.transmission.btc.ssdp.SsdpServer;
@@ -262,28 +261,22 @@ public class Transmission {
 
   private void startUpnp() {
     if (!prefs.isUpnpEnabled()) return;
+    if ((ssdpServer != null) && ssdpServer.isRunning()) return;
+    HttpServer httpServer;
 
     try {
-      getHttpServer();
+      httpServer = getHttpServer();
     } catch (IOException ex) {
       err(TAG, ex, "Failed to start HTTP Server");
       return;
     }
 
     try {
-      ssdpServer = new SsdpServer(this,
-          httpServer.getAddress() + DescriptorHandler.PATH);
+      if (ssdpServer == null) ssdpServer = new SsdpServer(httpServer);
       ssdpServer.start();
     } catch (IOException ex) {
       err(TAG, ex, "Failed to start SSDP server, SSDP NOTIFY will be sent every 60 seconds");
     }
-
-    getScheduler().scheduleWithFixedDelay(new Runnable() {
-      @Override
-      public void run() {
-        ssdpServer.sendNotify();
-      }
-    }, 0, 1, TimeUnit.MINUTES);
   }
 
   public void stop() {
@@ -354,6 +347,14 @@ public class Transmission {
         try {
           if (!isRunning()) return null;
           debug(TAG, "Suspending: %s, by user: %s", suspend, byUser);
+
+          if (suspend) {
+            Utils.close(ssdpServer);
+            ssdpServer = null;
+          } else {
+            startUpnp();
+          }
+
           Native.transmissionSuspend(session, suspend);
           suspended = (byte) (!suspend ? 0 : byUser ? 2 : 1);
         } finally {
@@ -368,7 +369,9 @@ public class Transmission {
         TransmissionService.updateNotification();
         if (callback != null) callback.run();
       }
-    }.execute();
+    }.
+
+        execute();
   }
 
   public boolean isSuspended() {

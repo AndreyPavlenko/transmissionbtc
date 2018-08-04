@@ -32,6 +32,7 @@ public class ConnectivityChangeReceiver extends BroadcastReceiver {
 
   @Override
   public void onReceive(Context context, Intent intent) {
+    Utils.resetInterfaceAddress();
     Transmission tr = TransmissionService.getTransmission();
     if ((tr == null) || !tr.isRunning()) return;
     Prefs prefs = new Prefs(context);
