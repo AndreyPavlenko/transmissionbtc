@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
@@ -28,6 +29,9 @@ import com.ap.transmission.btc.views.TabInfo;
 import com.ap.transmission.btc.views.TorrentsList;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author Andrey Pavlenko
@@ -88,9 +92,19 @@ public class MainActivity extends ActivityBase {
       public void onTabReselected(TabLayout.Tab tab) {}
     });
 
-    checkPermission(permission.INTERNET, permission.ACCESS_NETWORK_STATE,
-        permission.ACCESS_WIFI_STATE, permission.WRITE_EXTERNAL_STORAGE, permission.WAKE_LOCK,
-        permission.ACCESS_COARSE_LOCATION, permission.ACCESS_FINE_LOCATION);
+    List<String> perms = Arrays.asList(permission.INTERNET, permission.ACCESS_NETWORK_STATE,
+        permission.ACCESS_WIFI_STATE, permission.WRITE_EXTERNAL_STORAGE, permission.WAKE_LOCK);
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      // In Android 8+ these permissions are required to get the WiFi SSID.
+      List<String> l = new ArrayList<>(perms.size() + 2);
+      l.addAll(perms);
+      l.add(permission.ACCESS_COARSE_LOCATION);
+      l.add(permission.ACCESS_FINE_LOCATION);
+      perms = l;
+    }
+
+    checkPermission(perms.toArray(new String[perms.size()]));
     findViewById(R.id.button_start_stop).requestFocus();
   }
 
@@ -250,7 +264,7 @@ public class MainActivity extends ActivityBase {
   private void checkPermission(String... perms) {
     for (String perm : perms) {
       if (ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED) {
-        ActivityCompat.requestPermissions(this, new String[]{perm}, GRANT_PERM);
+        ActivityCompat.requestPermissions(this, perms, GRANT_PERM);
       }
     }
   }

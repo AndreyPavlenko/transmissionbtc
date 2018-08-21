@@ -142,7 +142,10 @@ public class TorrentFile implements TorrentItem {
       int bitIdx = (i % 64);
 
       if ((fieldIdx < 0) || (fieldIdx >= s.length)) {
-        throw new ArrayIndexOutOfBoundsException(Arrays.toString(s));
+        // FIXME: Report this issue
+        // throw new ArrayIndexOutOfBoundsException(Arrays.toString(s));
+        stat(true);
+        break;
       }
 
       long field = s[fieldIdx];
