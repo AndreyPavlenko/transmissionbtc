@@ -698,6 +698,7 @@ static double getVerifyProgress(tr_torrent const *tor) {
 typedef struct StatBriefData {
     jlong *stat;
     jint statLen;
+    bool alloc;
 } StatBriefData;
 
 /*
@@ -719,9 +720,10 @@ static void *torrentStatBrief(tr_session *session, void *data, __unused Err *err
   int numTorrents = session->torrentCount;
   int statLen = numTorrents * 10;
 
-  if (statLen != d->statLen) {
+  if ((d->stat == NULL) || (statLen != d->statLen)) {
     d->stat = malloc(sizeof(jlong) * statLen);
     d->statLen = statLen;
+    d->alloc = true;
   }
 
   for (int i = 0; (it != NULL); it = it->next, i += 10) {
@@ -781,21 +783,23 @@ static void *torrentStatBrief(tr_session *session, void *data, __unused Err *err
 JNIEXPORT jlongArray JNICALL
 Java_com_ap_transmission_btc_Native_torrentStatBrief(
     JNIEnv *env, jclass __unused c, jlong jsession, jlongArray jstat) {
-  StatBriefData d = {NULL, 0};
+  StatBriefData d = {NULL, 0, false};
   jlong *stat = NULL;
+  bool release = false;
 
   if (jstat != NULL) {
     d.stat = stat = (*env)->GetLongArrayElements(env, jstat, 0);
     d.statLen = (*env)->GetArrayLength(env, jstat);
+    release = true;
   }
 
   runInTransmissionThreadEx(env, jsession, torrentStatBrief, &d);
 
   CATCH:
-  if (jstat != NULL) {
+  if (release) {
     (*env)->ReleaseLongArrayElements(env, jstat, stat, 0);
   }
-  if (d.stat != stat) {
+  if (d.alloc) {
     jstat = (*env)->NewLongArray(env, d.statLen);
     (*env)->SetLongArrayRegion(env, jstat, 0, d.statLen, d.stat);
     free(d.stat);

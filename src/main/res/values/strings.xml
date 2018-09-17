@@ -100,8 +100,8 @@
     <string name="menu_new_folder">New folder</string>
 
     <string name="err_dir_not_writable">Directory is not writable: %s</string>
-    <string name="err_no_persist_perm">Persistable permission not granted</string>
-    <string name="err_no_persist_perm_arg">Persistable permission not granted: %s</string>
+    <string name="err_no_persist_perm">Persistable read/write permission not granted</string>
+    <string name="err_no_persist_perm_arg">Persistable read/write permission not granted: %s</string>
     <string name="err_failed_to_get_path">Failed to get real path: %s</string>
     <string name="err_create_dir">Failed to create directory: %s</string>
     <string name="err_failed_to_open_url">Failed to open url: %s</string>

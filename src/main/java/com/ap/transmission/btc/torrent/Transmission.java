@@ -550,8 +550,8 @@ public class Transmission {
       try {
         if ((exec = executor) == null) {
           executor = exec = new ThreadPoolExecutor(0,
-              30, 60L, TimeUnit.SECONDS,
-              new SynchronousQueue<Runnable>());
+              30, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+              Executors.defaultThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
         }
       } finally {
         writeLock().unlock();
