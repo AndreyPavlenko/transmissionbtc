@@ -127,6 +127,8 @@ public class TorrentView extends RelativeLayout
       }
     } catch (NoSuchTorrentException ex) {
       tor.getFs().reportNoSuchTorrent(ex);
+    } catch (IllegalStateException ex) {
+      err(getClass().getName(), ex, "Invalid Torrent or TorrentFs");
     }
 
     if (isPaused()) {
@@ -307,6 +309,8 @@ public class TorrentView extends RelativeLayout
         }
       } catch (NoSuchTorrentException ex) {
         torrent.getFs().reportNoSuchTorrent(ex);
+      } catch (IllegalStateException ex) {
+        err(getClass().getName(), ex, "Invalid Torrent or TorrentFs");
       }
     }
   }
@@ -503,6 +507,8 @@ public class TorrentView extends RelativeLayout
         TorrentView.this.update();
       } catch (NoSuchTorrentException ex) {
         torrent.getFs().reportNoSuchTorrent(ex);
+      } catch (IllegalStateException ex) {
+        err(getClass().getName(), ex, "Invalid Torrent or TorrentFs");
       }
     }
 
@@ -575,6 +581,8 @@ public class TorrentView extends RelativeLayout
         progressColor = setProgress(pb, dnd ? 0 : item.getProgress(false), progressColor);
       } catch (NoSuchTorrentException ex) {
         torrent.getFs().reportNoSuchTorrent(ex);
+      } catch (IllegalStateException ex) {
+        err(getClass().getName(), ex, "Invalid Torrent or TorrentFs");
       }
     }
 

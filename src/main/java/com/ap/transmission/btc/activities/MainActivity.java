@@ -225,11 +225,18 @@ public class MainActivity extends ActivityBase {
 
   @Override
   public boolean onPrepareOptionsMenu(Menu menu) {
-    prepareMenu(menu.getItem(0).getSubMenu());
+    prepareMenu(menu);
     return true;
   }
 
-  private void prepareMenu(Menu menu) {
+  private void prepareMenu(Menu m) {
+    Menu menu = findMenu(m);
+
+    if (menu == null) {
+      Utils.warn(getClass().getName(), "Main menu not found");
+      return;
+    }
+
     if (!bindingHelper.isServiceRunning()) {
       menu.getItem(0).setVisible(false); // Add file
       menu.getItem(1).setVisible(false); // Add link
@@ -253,6 +260,21 @@ public class MainActivity extends ActivityBase {
       menu.getItem(4).setEnabled(!bindingHelper.isServiceStarting());
       menu.getItem(5).setVisible(false); // Start
     }
+  }
+
+  private Menu findMenu(Menu menu) {
+    for (int i = 0, size = menu.size(); i < size; i++) {
+      MenuItem item = menu.getItem(i);
+
+      if (item.getItemId() == R.id.add_file) {
+        return menu;
+      } else if (item.hasSubMenu()) {
+        Menu m = findMenu(item.getSubMenu());
+        if (m != null) return m;
+      }
+    }
+
+    return null;
   }
 
   @Override
