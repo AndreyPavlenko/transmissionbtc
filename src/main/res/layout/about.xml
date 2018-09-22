@@ -36,7 +36,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="fill_horizontal"
-                app:html="@{String.format(@string/about_html, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, Transmission.getVersion(), h.ip)}" />
+                app:html="@{String.format(@string/about_html, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, Transmission.getVersion())}" />
 
         </GridLayout>
     </ScrollView>

@@ -73,7 +73,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="50"
-                android:text="@string/cancel"
+                android:text="@android:string/cancel"
                 tools:ignore="ButtonStyle" />
         </LinearLayout>
 

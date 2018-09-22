@@ -1,0 +1,114 @@
+<resources>
+    <string name="start">Старт</string>
+    <string name="stop">Стоп</string>
+    <string name="webui">Веб-интерфейс</string>
+    <string name="new_folder">Создать</string>
+    <string name="settings_dir">Директория конфигурации</string>
+    <string name="download_dir">Директория загрузки</string>
+    <string name="watch_interval">Интервал сканирования (опционально)</string>
+    <string name="add_watch_dir">Добавить директорию</string>
+    <string name="watch_dir">Директория мониторинга</string>
+    <string name="enable_upnp">Включить UPnP ContentDirectory</string>
+    <string name="http_port">HTTP порт</string>
+    <string name="enable_rpc">Включить RPC</string>
+    <string name="enable_rpc_whitelist">Включить RPC Whitelist</string>
+    <string name="rpc_port">RPC порт</string>
+    <string name="start_foreground">Запускать на переднем плане</string>
+    <string name="start_on_boot">Запускать после загрузки системы</string>
+    <string name="boot_delay">Задержка (секунд)</string>
+    <string name="wifi_eth_only">Работать только в сети WiFi/Ethernet</string>
+    <string name="wifi_eth_only_ssid">Разрешенные SSIDs</string>
+    <string name="increase_so_buf">Увеличить сокет буферы (нужен рут)</string>
+    <string name="enable_seq_download">Включить последовательную загрузку</string>
+    <string name="auth_required">Необходима аутентификация</string>
+    <string name="username">Имя пользователя</string>
+    <string name="password">Пароль</string>
+    <string name="paused">Пауза</string>
+    <string name="verifying_data">Проверка локальных данных</string>
+    <string name="torrent_link">Торрент или magnet ссылка</string>
+    <string name="folder_name">Имя директории</string>
+
+    <string name="encr_mode">Шифрование</string>
+    <string name="encr_mode_allow">Разрешено</string>
+    <string name="encr_mode_prefer">Предпочтительно</string>
+    <string name="encr_mode_require">Необходимо</string>
+
+    <string name="proxy_enable">Включить прокси</string>
+    <string name="proxy_all">Все</string>
+    <string name="proxy_http">HTTP</string>
+    <string name="proxy_https">HTTPS</string>
+    <string name="proxy_no">Без прокси</string>
+
+    <string name="download">Скачать</string>
+    <string name="open">Открыть</string>
+    <string name="enqueue">В очередь</string>
+    <string name="open_with">Открыть с помощью</string>
+    <string name="download_with_transmission">Скачать с помощью Transmission BTC</string>
+    <string name="open_with_transmission">Открыть с помощью Transmission BTC</string>
+
+    <string name="title_downloads">Загрузки</string>
+    <string name="title_settings">Настройки</string>
+    <string name="title_watch_dirs">Мониторинг директорий</string>
+    <string name="title_proxy">Настройки прокси</string>
+    <string name="title_about">О приложении</string>
+
+    <string name="notif_running1">Выполняется</string>
+    <string name="notif_running2">Выполняется: %s</string>
+    <string name="notif_suspended1">Приостановлено</string>
+    <string name="notif_suspended2">Приостановлено: %s</string>
+
+    <string name="about_html"><![CDATA[<H1 align="center">Transmission BitTorrent Client</H1>
+        <p>Transmission - это мощный и, в то же время, очень легковесный и быстрый BitTorrent клиент.
+        Он поддерживает те функции, которые бы вы хотели от BitTorrent клиента: шифрование,
+        web-интерфейс, обмен пирами, magnet-ссылки, DHT, µTP, UPnP и перенаправление портов NAT-PMP,
+        поддержка веб-сидов, редактирование трекеров, ограничение скорости как общей, так и для
+        отдельного торрента и многое другое.</p>
+        <p>Данное приложение - Андроид порт демона Transmission с некоторыми улучшениями и дополнениями.
+        Демон работает в фоновом режиме, как Андроид сервис. Чтобы управлять им, вы можете либо
+        использовать встроенный веб-интерфейс, либо любой другой удаленный клиент Transmission.</p>
+        <p>Для более детальной информации о Transmission, пожалуйста, посетите официальную страницу
+        проекта - <a href="https://transmissionbt.com/">https://transmissionbt.com/</a>.</p><br/>
+        <p><b>Автор:</b> Андрей Павленко
+        <p><b>Версия:</b> %1$s (%2$d)
+        <p><b>Версия Transmission:</b> %3$s
+        ]]>
+    </string>
+
+    <string name="menu_add_file">Добавить файл</string>
+    <string name="menu_add_link">Добавить ссылку</string>
+    <string name="menu_play">Проиграть</string>
+    <string name="menu_pause">Пауза</string>
+    <string name="menu_suspend">Приостановить</string>
+    <string name="menu_resume">Возобновить</string>
+    <string name="menu_verify">Проверить</string>
+    <string name="menu_set_location">Переместить</string>
+    <string name="menu_remove">Удалить торрент</string>
+    <string name="menu_remove_and_trash">Удалить торрент и данные</string>
+    <string name="menu_expand">Развернуть</string>
+    <string name="menu_collapse">Свернуть</string>
+    <string name="menu_new_folder">Новая директория</string>
+
+    <string name="err_dir_not_writable">Директория недоступна для записи: %s</string>
+    <string name="err_no_persist_perm">Постоянное разрешение на чтение/запись не получено</string>
+    <string name="err_no_persist_perm_arg">Постоянное разрешение на чтение/запись не получено: %s</string>
+    <string name="err_failed_to_get_path">Не удалось получить реальный путь: %s</string>
+    <string name="err_create_dir">Не удалось создать открыть ссылку: %s</string>
+    <string name="err_check_root_failed">Не удалось получить рут привилегии</string>
+    <string name="err_no_torrent_file">Торрент файл не указан</string>
+    <string name="err_failed_to_open_torrent_file">Не удалось открыть торрент файл: %s</string>
+    <string name="err_failed_to_open_playlist">Не удалось открыть плейлист</string>
+    <string name="err_failed_to_open_torrent">Не удалось открыть торрент: %s</string>
+    <string name="err_failed_to_parse_torrent_file">Не удалось разобрать торрент файл</string>
+    <string name="err_failed_to_load_torrent">Не удалось загрузить торрент: %s</string>
+    <string name="err_failed_to_load_magnet">Не удалось загрузить magnet-ссылку: %s</string>
+    <string name="err_torrent_already_added">Торрент уже добавлен</string>
+    <string name="err_service_not_started">Сервис transmission не запущен</string>
+    <string name="err_failed_to_start_transmission">Не удалось запустить сервис transmission</string>
+    <string name="err_failed_to_start_http_server">Не удалось запустить HTTP сервер: %s</string>
+    <string name="err_timeout_exceeded">Превышен интервал ожидания</string>
+
+    <string name="msg_select_file">Пожалуйста, выберите хотя бы один файл</string>
+    <string name="msg_no_files_in_torrent">Торрент не содержит файлов</string>
+    <string name="msg_enter_link">Пожалуйста, введите торрент или magnet ссылку</string>
+    <string name="msg_playlist_copied">Ссылка на плейлист скопирована в буфер обмена</string>
+</resources>

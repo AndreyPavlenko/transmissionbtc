@@ -1,19 +1,15 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <string name="app_name">Transmission BTC</string>
     <string name="start">Start</string>
     <string name="stop">Stop</string>
     <string name="webui">Web UI</string>
-    <string name="browse">Browse</string>
-    <string name="ok" tools:ignore="ButtonCase,Typos">Ok</string>
-    <string name="cancel">Cancel</string>
     <string name="new_folder">New</string>
     <string name="settings_dir">Settings directory</string>
     <string name="download_dir">Download directory</string>
-    <string name="enable_watch_dir">Enable watch directory</string>
     <string name="watch_interval">Scan interval in seconds (optional)</string>
     <string name="add_watch_dir">Add watch directory</string>
     <string name="watch_dir">Watch directory</string>
-    <string name="enable_upnp">Enable UPnP</string>
+    <string name="enable_upnp">Enable UPnP ContentDirectory</string>
     <string name="http_port">HTTP Port</string>
     <string name="enable_rpc">Enable RPC</string>
     <string name="enable_rpc_whitelist">Enable RPC Whitelist</string>
@@ -59,7 +55,6 @@
     <string name="title_settings">Settings</string>
     <string name="title_watch_dirs">Watch Directories</string>
     <string name="title_proxy">Proxy settings</string>
-    <string name="title_rss">RSS</string>
     <string name="title_about">About</string>
 
     <string name="notif_running1">Running</string>
@@ -72,16 +67,15 @@
         the features you want from a BitTorrent client: encryption, a web interface, peer exchange,
         magnet links, DHT, µTP, UPnP and NAT-PMP port forwarding, webseed support, tracker editing,
         global and per-torrent speed limits, and more.</p>
-        <p>This application is a port of the Transmission daemon for Android with a few additions.
-        The daemon is running as a background service. To communicate with the daemon you may
-        either use the built-in WEB interface or any Transmission remote of choice.</p>
+        <p>This application is a port of the Transmission daemon for Android with a few enhancements and
+        additions. The daemon is running in background as an Android service. To communicate with the
+        daemon you may either use the built-in WEB interface or any Transmission remote of choice.</p>
         <p>For more information on the Transmission client please refer to the official site of the
         Transmission Project -
         <a href="https://transmissionbt.com/">https://transmissionbt.com/</a>.</p><br/>
         <p><b>Author:</b> Andrey Pavlenko
         <p><b>Version:</b> %1$s (%2$d)
         <p><b>Transmission version:</b> %3$s
-        <p><b>IP Address:</b> %4$s
         ]]>
     </string>
 

@@ -49,7 +49,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="30"
-            android:text="@string/ok" />
+            android:text="@android:string/ok" />
 
         <Button
             android:id="@+id/button_new_folder"
@@ -63,7 +63,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="30"
-            android:text="@string/cancel" />
+            android:text="@android:string/cancel" />
     </LinearLayout>
 
 </RelativeLayout>

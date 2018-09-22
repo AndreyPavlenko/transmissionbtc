@@ -186,7 +186,7 @@ public class MainActivity extends ActivityBase {
     builder.setTitle(R.string.torrent_link);
     builder.setView(input);
 
-    builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+    builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {
         String text = input.getText().toString().trim();
@@ -201,7 +201,7 @@ public class MainActivity extends ActivityBase {
         }
       }
     });
-    builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+    builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {
         dialog.cancel();
