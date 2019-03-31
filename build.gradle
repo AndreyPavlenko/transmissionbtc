@@ -1,5 +1,5 @@
-def version = '1.2.21'
-def versionNum = 61
+def version = '1.2.23'
+def versionNum = 63
 def basic_version = '1.0.0'
 def basic_versionNum = 1
 
@@ -10,7 +10,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.4'
+        classpath 'com.android.tools.build:gradle:3.3.2'
     }
 }
 
@@ -23,7 +23,7 @@ apply plugin: 'com.android.application'
 
 def localProps = new Properties()
 localProps.load(file('local.properties').newDataInputStream())
-def apiMap = ['14': '4.0', '21': '5.0']
+def apiMap = ['16': '4.1', '21': '5.0']
 def abiMap = ['arm': 'armeabi-v7a', 'arm64': 'arm64-v8a', 'x86': 'x86', 'x86_64': 'x86_64']
 def flavors = [
         [
@@ -35,7 +35,7 @@ def flavors = [
         [
                 'arch'       : 'arm',
                 'versionBase': 7,
-                'api'        : [14, 21]
+                'api'        : [16]
         ],
         [
                 'arch'       : 'x86_64',
@@ -45,14 +45,14 @@ def flavors = [
         [
                 'arch'       : 'x86',
                 'versionBase': 3,
-                'api'        : [14]
+                'api'        : [16]
         ]
 ]
 
 android {
     defaultConfig {
         applicationId 'com.ap.transmission.btc'
-        minSdkVersion 14
+        minSdkVersion 16
         targetSdkVersion 27
         compileSdkVersion 27
         versionCode versionNum
@@ -75,7 +75,7 @@ android {
                 dimension 'main'
                 minSdkVersion api
                 versionCode vcode
-                sourceSets[name].assets.srcDirs += "${depends}/share/transmission"
+                sourceSets[name].assets.srcDirs += "${depends}/usr/share/transmission"
 
                 externalNativeBuild {
                     ndk.abiFilters abiMap[arch]
@@ -128,8 +128,6 @@ android {
         if (v.buildType.name.endsWith("basic")) {
             vname = basic_version
             vcode = (vcode - versionNum) + basic_versionNum
-            v.mergedFlavor.versionName = vname
-            v.mergedFlavor.versionCode = vcode
         }
         v.outputs.all {
             def name = "${v.applicationId}-${v.flavorName}-${v.mergedFlavor.versionName}"

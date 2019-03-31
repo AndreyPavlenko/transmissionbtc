@@ -12,6 +12,7 @@ import com.ap.transmission.btc.EncrMode;
 import com.ap.transmission.btc.Native;
 import com.ap.transmission.btc.PowerLock;
 import com.ap.transmission.btc.Prefs;
+import com.ap.transmission.btc.StorageAccess;
 import com.ap.transmission.btc.Utils;
 import com.ap.transmission.btc.func.Promise;
 import com.ap.transmission.btc.http.HttpServer;
@@ -693,9 +694,14 @@ public class Transmission {
 
       if (result == OK) {
         File renameTo = new File(dir, path + ".added");
-        if (!f.renameTo(renameTo)) err(TAG, "Failed to rename file to: %s", renameTo);
+        if (!f.renameTo(renameTo) &&
+            !StorageAccess.renamePath(f.getAbsolutePath(), renameTo.getAbsolutePath())) {
+          err(TAG, "Failed to rename file to: %s", renameTo);
+        }
       } else if (result != NOT_STARTED) {
-        if (!f.delete()) err(TAG, "Failed to delete file: %s", f);
+        if (!f.delete() && !StorageAccess.removePath(f.getAbsolutePath())) {
+          err(TAG, "Failed to delete file: %s", f);
+        }
       }
     }
   }

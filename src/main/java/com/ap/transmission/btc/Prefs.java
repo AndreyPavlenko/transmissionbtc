@@ -88,7 +88,9 @@ public class Prefs {
         p.putString(UUID, uuid);
         return uuid;
       }
-    });
+    }),
+    SHOW_LOCATION_PERM_ALERT(true);
+
     private final Function<Prefs, Object> func;
     private Object def;
 
@@ -581,25 +583,25 @@ public class Prefs {
     e.apply();
   }
 
-  private boolean getBoolean(K k) {
+  public boolean getBoolean(K k) {
     return prefs.getBoolean(k.id(), k.<Boolean>def(this));
   }
 
-  private void putBoolean(K k, boolean b) {
+  public void putBoolean(K k, boolean b) {
     prefs.edit().putBoolean(k.id(), b).apply();
   }
 
-  private int getInt(K k) {
+  public int getInt(K k) {
     return prefs.getInt(k.id(), k.<Integer>def(this));
   }
 
-  private void putInt(K k, CharSequence value) {
+  public void putInt(K k, CharSequence value) {
     try {
       putInt(k, Integer.parseInt(value.toString()));
     } catch (NumberFormatException ignore) {}
   }
 
-  private void putInt(K k, int value) {
+  public void putInt(K k, int value) {
     prefs.edit().putInt(k.id(), value).apply();
   }
 

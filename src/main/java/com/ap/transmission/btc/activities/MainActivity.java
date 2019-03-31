@@ -95,17 +95,30 @@ public class MainActivity extends ActivityBase {
     List<String> perms = Arrays.asList(permission.INTERNET, permission.ACCESS_NETWORK_STATE,
         permission.ACCESS_WIFI_STATE, permission.WRITE_EXTERNAL_STORAGE, permission.WAKE_LOCK);
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) &&
+        getPrefs().getBoolean(Prefs.K.SHOW_LOCATION_PERM_ALERT)) {
       // In Android 8+ these permissions are required to get the WiFi SSID.
-      List<String> l = new ArrayList<>(perms.size() + 2);
+      final List<String> l = new ArrayList<>(perms.size() + 2);
       l.addAll(perms);
       l.add(permission.ACCESS_COARSE_LOCATION);
       l.add(permission.ACCESS_FINE_LOCATION);
-      perms = l;
-    }
+      getPrefs().putBoolean(Prefs.K.SHOW_LOCATION_PERM_ALERT, false);
 
-    checkPermission(perms.toArray(new String[perms.size()]));
-    findViewById(R.id.button_start_stop).requestFocus();
+      AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
+      alertBuilder.setTitle(R.string.location_perm_title);
+      alertBuilder.setMessage(R.string.location_perm_msg);
+      alertBuilder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+          checkPermission(l.toArray(new String[l.size()]));
+          findViewById(R.id.button_start_stop).requestFocus();
+        }
+      });
+      alertBuilder.create().show();
+    } else {
+      checkPermission(perms.toArray(new String[perms.size()]));
+      findViewById(R.id.button_start_stop).requestFocus();
+    }
   }
 
   @Override

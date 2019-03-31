@@ -117,4 +117,8 @@
     <string name="msg_no_files_in_torrent">The torrent has no files</string>
     <string name="msg_enter_link">Please enter the link</string>
     <string name="msg_playlist_copied">Playlist URL copied to clipboard</string>
+
+    <string name="location_perm_title">Location permission</string>
+    <string name="location_perm_msg">Access to device\'s location is required for the \"Allowed SSIDs\"
+        feature. If you are not going to use this feature, you may decline the permission request.</string>
 </resources>

@@ -111,4 +111,8 @@
     <string name="msg_no_files_in_torrent">Торрент не содержит файлов</string>
     <string name="msg_enter_link">Пожалуйста, введите торрент или magnet ссылку</string>
     <string name="msg_playlist_copied">Ссылка на плейлист скопирована в буфер обмена</string>
+    <string name="location_perm_title">Разрешение на доступ к местоположению</string>
+    <string name="location_perm_msg">Разрешение на доступ к данным о местоположении необходим для
+        опции \"Разрешенные SSIDs\". Если вы не планируете использовать эту опцию, вы можете
+        отклонить запрос разрешения.</string>
 </resources>
