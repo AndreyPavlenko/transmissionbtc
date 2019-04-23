@@ -18,6 +18,7 @@ import static android.os.Build.VERSION_CODES.JELLY_BEAN_MR2;
 import static android.os.Build.VERSION_CODES.KITKAT;
 import static com.ap.transmission.btc.Prefs.K.BOOT_DELAY;
 import static com.ap.transmission.btc.Prefs.K.DOWNLOAD_DIR;
+import static com.ap.transmission.btc.Prefs.K.ENABLE_ALT_WEB_UI;
 import static com.ap.transmission.btc.Prefs.K.ENABLE_PROXY;
 import static com.ap.transmission.btc.Prefs.K.ENABLE_RPC;
 import static com.ap.transmission.btc.Prefs.K.ENABLE_RPC_AUTH;
@@ -64,6 +65,7 @@ public class Prefs {
     WATCH_INTERVAL(0),
     ENABLE_RPC(true),
     RPC_PORT(9091),
+    ENABLE_ALT_WEB_UI(false),
     ENABLE_RPC_AUTH(false),
     RPC_UNAME(""),
     RPC_PASSWD(""),
@@ -168,6 +170,8 @@ public class Prefs {
         return isRpcEnabled();
       case RPC_PORT:
         return getRpcPort();
+      case ENABLE_ALT_WEB_UI:
+        return isAltWebEnabled();
       case ENABLE_RPC_AUTH:
         return isRpcAuthEnabled();
       case RPC_UNAME:
@@ -233,6 +237,9 @@ public class Prefs {
         break;
       case RPC_PORT:
         setRpcPort(value.toString());
+        break;
+      case ENABLE_ALT_WEB_UI:
+        setAltWebEnabled((Boolean) value);
         break;
       case ENABLE_RPC_AUTH:
         setRpcAuthEnabled((Boolean) value);
@@ -445,6 +452,15 @@ public class Prefs {
 
   public void setRpcPort(CharSequence port) {
     putInt(RPC_PORT, port);
+  }
+
+
+  public boolean isAltWebEnabled() {
+    return getBoolean(ENABLE_ALT_WEB_UI);
+  }
+
+  public void setAltWebEnabled(boolean enabled) {
+    putBoolean(ENABLE_ALT_WEB_UI, enabled);
   }
 
   public boolean isRpcAuthEnabled() {

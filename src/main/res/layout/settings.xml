@@ -278,6 +278,24 @@
                 android:background="@drawable/separator"
                 android:visibility="@{p.rpcEnabled}" />
 
+            <!-- Enable alternative WEB UI -->
+            <com.ap.transmission.btc.views.CheckBoxView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_marginLeft="10dp"
+                android:visibility="@{p.rpcEnabled}"
+                app:pref="@{K.ENABLE_ALT_WEB_UI}"
+                app:text="@string/enable_alt_web_ui" />
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_columnSpan="2"
+                android:layout_marginLeft="10dp"
+                android:background="@drawable/separator"
+                android:visibility="@{p.rpcEnabled}" />
+
             <!-- Authentication required -->
             <com.ap.transmission.btc.views.CheckBoxView
                 android:layout_width="match_parent"

@@ -705,15 +705,37 @@ public class Utils {
     }
   }
 
-  public static void transfer(FileDescriptor src, FileDescriptor dst) throws IOException {
+  public static void transfer(File src, File dst) throws IOException {
     FileInputStream fis = null;
     FileOutputStream fos = null;
-    FileChannel sch = null;
-    FileChannel och = null;
 
     try {
       fis = new FileInputStream(src);
       fos = new FileOutputStream(dst);
+      transfer(fis, fos);
+    } finally {
+      close(fis, fos);
+    }
+  }
+
+  public static void transfer(FileDescriptor src, FileDescriptor dst) throws IOException {
+    FileInputStream fis = null;
+    FileOutputStream fos = null;
+
+    try {
+      fis = new FileInputStream(src);
+      fos = new FileOutputStream(dst);
+      transfer(fis, fos);
+    } finally {
+      close(fis, fos);
+    }
+  }
+
+  public static void transfer(FileInputStream fis, FileOutputStream fos) throws IOException {
+    FileChannel sch = null;
+    FileChannel och = null;
+
+    try {
       sch = fis.getChannel();
       och = fos.getChannel();
 
@@ -723,7 +745,7 @@ public class Utils {
         len -= n;
       }
     } finally {
-      close(fis, fos, sch, och);
+      close(sch, och);
     }
   }
 

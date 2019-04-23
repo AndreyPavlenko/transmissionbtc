@@ -148,8 +148,13 @@ public class Transmission {
       File webDir = new File(dataDir, "web");
       File settings = new File(configDir, SETTINGS_FILE);
       File tmp = new File(dataDir, "tmp");
+      File indexHtml = new File(dataDir, "web/index.html");
+      File indexOrigHtml = prefs.isAltWebEnabled() ? new File(dataDir, "web/index.webcontrol.html")
+          : new File(dataDir, "web/index.original.html");
       mkdirs(configDir, downloadDir, tmp);
+
       copyAssets(ctx.getAssets(), "web", dataDir, true);
+      if (indexHtml.length() != indexOrigHtml.length()) Utils.transfer(indexOrigHtml, indexHtml);
 
       if (prefs.isWifiEthOnly()) {
         suspend = !Utils.isWifiEthActive(ctx, prefs.getWifiSsid());

@@ -14,6 +14,7 @@
     <string name="enable_rpc">Enable RPC</string>
     <string name="enable_rpc_whitelist">Enable RPC Whitelist</string>
     <string name="rpc_port">RPC Port</string>
+    <string name="enable_alt_web_ui">Enable alternative Web UI</string>
     <string name="start_foreground">Start foreground</string>
     <string name="start_on_boot">Start on boot</string>
     <string name="boot_delay">Boot delay in seconds</string>

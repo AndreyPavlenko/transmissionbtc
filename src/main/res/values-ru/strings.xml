@@ -13,6 +13,7 @@
     <string name="enable_rpc">Включить RPC</string>
     <string name="enable_rpc_whitelist">Включить RPC Whitelist</string>
     <string name="rpc_port">RPC порт</string>
+    <string name="enable_alt_web_ui">Включить альтернативный Веб-интерфейс</string>
     <string name="start_foreground">Запускать на переднем плане</string>
     <string name="start_on_boot">Запускать после загрузки системы</string>
     <string name="boot_delay">Задержка (секунд)</string>
@@ -112,7 +113,7 @@
     <string name="msg_enter_link">Пожалуйста, введите торрент или magnet ссылку</string>
     <string name="msg_playlist_copied">Ссылка на плейлист скопирована в буфер обмена</string>
     <string name="location_perm_title">Разрешение на доступ к местоположению</string>
-    <string name="location_perm_msg">Разрешение на доступ к данным о местоположении необходим для
+    <string name="location_perm_msg">Разрешение на доступ к данным о местоположении необходимо для
         опции \"Разрешенные SSIDs\". Если вы не планируете использовать эту опцию, вы можете
         отклонить запрос разрешения.</string>
 </resources>

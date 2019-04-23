@@ -1,5 +1,5 @@
-def version = '1.2.23'
-def versionNum = 63
+def version = '1.3.0'
+def versionNum = 64
 def basic_version = '1.0.0'
 def basic_versionNum = 1
 
@@ -10,7 +10,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.3.2'
+        classpath 'com.android.tools.build:gradle:3.4.0'
     }
 }
 
@@ -35,7 +35,7 @@ def flavors = [
         [
                 'arch'       : 'arm',
                 'versionBase': 7,
-                'api'        : [16]
+                'api'        : [16, 21]
         ],
         [
                 'arch'       : 'x86_64',
