@@ -12,9 +12,12 @@ import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
 import android.support.v4.provider.DocumentFile;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -73,6 +76,9 @@ public class SelectFileActivity extends ListActivity {
   private static final int REQ_PERM = 11;
   private static final int REQ_PERM_MKDIR = 12;
   private static byte useOpenDocumentTree;
+  private Button okButton;
+  private Button newFolderButton;
+  private EditText pathText;
   private ListFiles list;
   private boolean filesOnly;
   private boolean dirsOnly;
@@ -105,34 +111,48 @@ public class SelectFileActivity extends ListActivity {
     setContent(initial);
     setContentView(R.layout.select_file);
 
-    Button ok = findViewById(R.id.button_ok);
-    Button cancel = findViewById(R.id.button_cancel);
-    Button newFolder = findViewById(R.id.button_new_folder);
+    Button cancelButton = findViewById(R.id.button_cancel);
+    okButton = findViewById(R.id.button_ok);
+    newFolderButton = findViewById(R.id.button_new_folder);
+    pathText = findViewById(R.id.path);
 
-    ok.setOnClickListener(new View.OnClickListener() {
+    okButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
         ok();
       }
     });
-    cancel.setOnClickListener(new View.OnClickListener() {
+    cancelButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
         setResult(RESULT_CANCEL);
         finish();
       }
     });
-    newFolder.setOnClickListener(new View.OnClickListener() {
+    newFolderButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
         newFolder();
       }
     });
 
+    pathText.addTextChangedListener(new TextWatcher() {
+      @Override
+      public void afterTextChanged(Editable s) {
+        okButton.setEnabled(pathText.getText().toString().length() != 0);
+      }
+
+      @Override
+      public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+      @Override
+      public void onTextChanged(CharSequence s, int start, int before, int count) { }
+    });
+
     refresh();
 
     if (msg != null) {
-      showMsg(ok, msg);
+      showMsg(okButton, msg);
     }
   }
 
@@ -202,7 +222,7 @@ public class SelectFileActivity extends ListActivity {
             if (newDir.mkdir() || StorageAccess.createDir(newDir.getAbsolutePath())) {
               setContent(selection);
             } else {
-              showErr(findViewById(R.id.button_ok), R.string.err_create_dir, newFolderName);
+              showErr(okButton, R.string.err_create_dir, newFolderName);
             }
           } else {
             newFolderName = text;
@@ -224,16 +244,15 @@ public class SelectFileActivity extends ListActivity {
 
   @SuppressLint("SetTextI18n")
   private void refresh() {
-    TextView title = findViewById(R.id.title);
-    Button ok = findViewById(R.id.button_ok);
-    Button newFolder = findViewById(R.id.button_new_folder);
-    ok.setEnabled(selection != null);
-    newFolder.setEnabled(list.dir != null);
-    if (list.dir == null) title.setText("");
-    else title.setText("> " + list.dir.getAbsolutePath());
+    okButton.setEnabled(selection != null);
+    newFolderButton.setEnabled(list.dir != null);
+    if (list.dir == null) pathText.setText("");
+    else pathText.setText(list.dir.getAbsolutePath());
   }
 
   private void ok() {
+    selection = new File(pathText.getText().toString());
+
     if (writable && !Utils.hasWritePerms(selection)) {
       if (!requestAccess(REQ_PERM)) showNotWritableErr(selection);
     } else {
@@ -330,7 +349,7 @@ public class SelectFileActivity extends ListActivity {
           if (StorageAccess.createDir(new File(dir, newFolderName).getAbsolutePath())) {
             setContent(selection);
           } else {
-            showErr(findViewById(R.id.button_ok), R.string.err_create_dir, newFolderName);
+            showErr(okButton, R.string.err_create_dir, newFolderName);
           }
         } else {
           showNotWritableErr(selection);
@@ -340,7 +359,7 @@ public class SelectFileActivity extends ListActivity {
       String path = Utils.getRealDirPath(getApplicationContext(), uri);
 
       if (path == null) {
-        showErr(findViewById(R.id.button_ok), R.string.err_failed_to_get_path);
+        showErr(okButton, R.string.err_failed_to_get_path);
       } else {
         File f = new File(path);
 
@@ -353,7 +372,7 @@ public class SelectFileActivity extends ListActivity {
 
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   private boolean requestAccess(int req) {
-    if (SDK_INT >= N) {
+    if ((SDK_INT >= N) && selection.isDirectory()) {
       final Context ctx = getApplicationContext();
       StorageManager sm = (StorageManager) ctx.getSystemService(Context.STORAGE_SERVICE);
 
@@ -388,12 +407,12 @@ public class SelectFileActivity extends ListActivity {
           | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
       getApplicationContext().getContentResolver().takePersistableUriPermission(uri, takeFlags);
     } catch (Exception ex) {
-      showErr(findViewById(R.id.button_ok), R.string.err_no_persist_perm_arg, ex.getLocalizedMessage());
+      showErr(okButton, R.string.err_no_persist_perm_arg, ex.getLocalizedMessage());
       return false;
     }
 
     if (addMapping(f, uri)) return true;
-    showErr(findViewById(R.id.button_ok), R.string.err_no_persist_perm);
+    showErr(okButton, R.string.err_no_persist_perm);
     return false;
   }
 
@@ -427,7 +446,7 @@ public class SelectFileActivity extends ListActivity {
   }
 
   private void showNotWritableErr(File f) {
-    showErr(findViewById(R.id.button_ok), R.string.err_dir_not_writable, f.getAbsolutePath());
+    showErr(okButton, R.string.err_dir_not_writable, f.getAbsolutePath());
   }
 
   private void setResult(File f) {
@@ -541,7 +560,6 @@ public class SelectFileActivity extends ListActivity {
           Method m = c.getDeclaredMethod("getPathFile");
           m.setAccessible(true);
           for (StorageVolume v : sm.getStorageVolumes()) files.add((File) m.invoke(v));
-          return files;
         } catch (Exception ex) {
           Log.e(getClass().getName(), "StorageVolume.getPathFile() failed", ex);
         }
@@ -552,10 +570,21 @@ public class SelectFileActivity extends ListActivity {
     if (root.canRead()) files.add(root);
     addRoot(files, getFilesDir());
     addRoot(files, getCacheDir());
+    addRoot(files, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
+    addRoot(files, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES));
+    addRoot(files, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC));
 
     if (VERSION.SDK_INT >= VERSION_CODES.KITKAT) {
       addRoot(files, getObbDirs());
+      addRoot(files, getExternalCacheDirs());
       addRoot(files, getExternalFilesDirs(null));
+
+      if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
+        addRoot(files, getExternalMediaDirs());
+      }
+      if (VERSION.SDK_INT >= VERSION_CODES.N) {
+        addRoot(files, getDataDir());
+      }
     } else {
       addRoot(files, getObbDir());
       addRoot(files, getExternalFilesDir(null));
@@ -571,8 +600,8 @@ public class SelectFileActivity extends ListActivity {
 
   private static void addRoot(Set<File> files, File dir) {
     if (dir == null) return;
-    for (File p = dir.getParentFile(); (p != null) && p.canRead(); dir = p, p = dir.getParentFile()) {}
-    files.add(dir);
+    for (File p = dir.getParentFile(); (p != null) && (p.isDirectory()) && p.canRead(); dir = p, p = dir.getParentFile()) {}
+    if ((dir.isDirectory()) && dir.canRead()) files.add(dir);
   }
 
   private static final class ListFiles {

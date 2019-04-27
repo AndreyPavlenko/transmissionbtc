@@ -16,26 +16,19 @@
         android:id="@+id/title_border"
         android:layout_width="fill_parent"
         android:layout_height="1dp"
-        android:layout_above="@+id/title_bar"
+        android:layout_above="@+id/path"
         android:background="@color/border" />
 
-    <HorizontalScrollView
-        android:id="@+id/title_bar"
+    <EditText
+        android:id="@+id/path"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@id/buttons"
-        android:gravity="fill_horizontal">
-
-        <TextView
-            android:id="@+id/title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:layout_marginTop="10dp"
-            android:ellipsize="end"
-            android:gravity="fill_horizontal"
-            android:lines="1" />
-    </HorizontalScrollView>
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:gravity="fill_horizontal"
+        android:inputType="textUri"
+        android:maxLines="1" />
 
     <LinearLayout
         android:id="@+id/buttons"
