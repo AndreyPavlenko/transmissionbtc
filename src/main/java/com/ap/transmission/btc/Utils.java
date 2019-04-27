@@ -22,7 +22,6 @@ import android.os.ParcelFileDescriptor;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.provider.DocumentFile;
-import android.system.ErrnoException;
 import android.system.Os;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -104,7 +103,7 @@ public class Utils {
 
   public static InetAddress getInterfaceAddress(Context context) {
     InetAddress result = ifaddr;
-    if(result != null) return result;
+    if (result != null) return result;
 
     Context ctx = context.getApplicationContext();
     ConnectivityManager cmgr = (ConnectivityManager) ctx.getSystemService(CONNECTIVITY_SERVICE);
@@ -242,7 +241,7 @@ public class Utils {
       } else {
         err(TAG, "getRealDirPath: pfd is null");
       }
-    } catch (IOException | ErrnoException ex) {
+    } catch (Exception ex) {
       Log.e(TAG, "Failed to resolve real path: " + dirUri, ex);
     } finally {
       if (pfd != null) try { pfd.close(); } catch (IOException ignored) {}
@@ -253,7 +252,7 @@ public class Utils {
   }
 
   @TargetApi(VERSION_CODES.LOLLIPOP)
-  public static String getDescriptorPath(ParcelFileDescriptor fd) throws ErrnoException {
+  public static String getDescriptorPath(ParcelFileDescriptor fd) throws Exception {
     String path = Os.readlink("/proc/self/fd/" + fd.getFd());
 
     if (path.startsWith("/mnt/media_rw/")) {
@@ -428,9 +427,9 @@ public class Utils {
 
   private static void copyAssets(AssetManager amgr, String src, File dstDir, byte[] buf)
       throws IOException {
-    String ls[] = amgr.list(src);
+    String[] ls = amgr.list(src);
 
-    if (ls.length > 0) {
+    if ((ls != null) && (ls.length > 0)) {
       for (String f : ls) {
         copyAssets(amgr, src + '/' + f, dstDir, buf);
       }
@@ -859,7 +858,7 @@ public class Utils {
       f.setAccessible(true);
       Object h = f.get(popup);
       h.getClass().getDeclaredMethod("setForceShowIcon", boolean.class).invoke(h, true);
-    } catch (Exception ignore) {ignore.printStackTrace();}
+    } catch (Exception ignore) { }
   }
 
   public static void openUri(Activity a, Uri uri, String mime) {
