@@ -1,6 +1,7 @@
 .externalNativeBuild/
 .gradle/
 .idea/
+.cxx/
 .settings/
 .project
 .classpath
