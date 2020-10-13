@@ -93,7 +93,8 @@ public class MainActivity extends ActivityBase {
     });
 
     List<String> perms = Arrays.asList(permission.INTERNET, permission.ACCESS_NETWORK_STATE,
-        permission.ACCESS_WIFI_STATE, permission.WRITE_EXTERNAL_STORAGE, permission.WAKE_LOCK);
+        permission.ACCESS_WIFI_STATE, permission.READ_EXTERNAL_STORAGE,
+        permission.WRITE_EXTERNAL_STORAGE, permission.WAKE_LOCK);
 
     if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) &&
         getPrefs().getBoolean(Prefs.K.SHOW_LOCATION_PERM_ALERT)) {

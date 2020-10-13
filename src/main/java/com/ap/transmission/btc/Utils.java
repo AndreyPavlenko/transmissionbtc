@@ -221,7 +221,7 @@ public class Utils {
     ParcelFileDescriptor pfd = null;
     DocumentFile dir = DocumentFile.fromTreeUri(ctx, dirUri);
     String rndName = "transmissionbtc-" + UUID.randomUUID() + ".tmp";
-    DocumentFile f = dir.createFile("octet/stream", rndName);
+    DocumentFile f = dir.createFile(StorageAccess.MIME_TYPE, rndName);
 
     if ((f == null) || !f.exists()) {
       err(TAG, "getRealDirPath: failed to create temporary file");

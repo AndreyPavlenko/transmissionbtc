@@ -54,6 +54,7 @@ import static android.os.Build.VERSION_CODES;
 import static android.os.Build.VERSION_CODES.KITKAT;
 import static android.os.Build.VERSION_CODES.LOLLIPOP;
 import static android.os.Build.VERSION_CODES.N;
+import static android.os.Build.VERSION_CODES.Q;
 import static com.ap.transmission.btc.Utils.err;
 import static com.ap.transmission.btc.Utils.hasWritePerms;
 import static com.ap.transmission.btc.Utils.showErr;
@@ -292,6 +293,7 @@ public class SelectFileActivity extends ListActivity {
       } else {
         if (!dirsOnly) {
           selection = file;
+          pathText.setText(file.getAbsolutePath());
           ok();
         }
 
@@ -421,7 +423,7 @@ public class SelectFileActivity extends ListActivity {
     DocumentFile df = DocumentFile.fromTreeUri(getApplicationContext(), uri);
     String tmp = "transmission-" + UUID.randomUUID();
     while (df.findFile(tmp) != null) tmp = "transmission-" + UUID.randomUUID();
-    DocumentFile tmpFile = df.createFile(null, tmp);
+    DocumentFile tmpFile = df.createFile(StorageAccess.MIME_TYPE, tmp);
 
     if (tmpFile != null) {
       try {
@@ -460,7 +462,9 @@ public class SelectFileActivity extends ListActivity {
     byte b = useOpenDocumentTree;
 
     if (b == 0) {
-      if ((SDK_INT >= LOLLIPOP) && (SDK_INT < N)) {
+      if (SDK_INT == Q) {
+        useOpenDocumentTree = b = 1;
+      } else if ((SDK_INT >= LOLLIPOP) && (SDK_INT < N)) {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         PackageManager pm = getApplicationContext().getPackageManager();
         ResolveInfo info = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY);

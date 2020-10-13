@@ -23,6 +23,7 @@ import static com.ap.transmission.btc.Utils.warn;
  * @author Andrey Pavlenko
  */
 public class StorageAccess {
+  public static final String MIME_TYPE = "octet/stream";
   private static final String TAG = StorageAccess.class.getName();
   private static final SparseArray<ParcelFileDescriptor> openFDs = new SparseArray<>();
   @SuppressLint("StaticFieldLeak")
@@ -130,7 +131,7 @@ public class StorageAccess {
 
       if (df == null) {
         if (create) {
-          df = dir.createFile(null, f.getName());
+          df = dir.createFile(MIME_TYPE, f.getName());
 
           if (df != null) {
             debug(TAG, "File created: %s", path);
@@ -308,7 +309,7 @@ public class StorageAccess {
         DocumentFile dst = dstDir.findFile(f.getName());
 
         if (dst == null) {
-          dst = dstDir.createFile(null, f.getName());
+          dst = dstDir.createFile(MIME_TYPE, f.getName());
 
           if (dst == null) {
             err(TAG, "Failed to create document file: %s at %s", f.getName(), dstDir);
