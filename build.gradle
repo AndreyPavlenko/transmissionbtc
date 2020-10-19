@@ -1,5 +1,5 @@
 def version = '1.3.5'
-def versionNum = 9000001
+def versionNum = 9000005
 
 buildscript {
     repositories {
@@ -8,7 +8,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.0.2'
+        classpath 'com.android.tools.build:gradle:4.1.0'
     }
 }
 
@@ -18,9 +18,6 @@ repositories {
 }
 
 apply plugin: 'com.android.application'
-
-def localProps = new Properties()
-localProps.load(file('local.properties').newDataInputStream())
 
 android {
     dataBinding.enabled true
@@ -34,11 +31,13 @@ android {
         versionCode versionNum
         versionName version
 
-        externalNativeBuild {
-            cmake {
-                targets 'transmissionbtc'
-                arguments "-DDEPENDS_ROOT=${localProps['depends']}"
-            }
+        externalNativeBuild.cmake {
+            targets 'transmissionbtc'
+            arguments "-DTR_SRC_DIR=${project.buildDir}/transmission"
+        }
+
+        ndk {
+            abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
         }
     }
 
@@ -47,18 +46,27 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
-    signingConfigs {
-        release {
-            storeFile file(localProps["kestorePath"])
-            storePassword localProps["kestorePassword"]
-            keyAlias localProps["kestoreAlias"]
-            keyPassword localProps["kestoreKeyPassword"]
+    def localPropsFile = file('local.properties')
+
+    if (localPropsFile.isFile()) {
+        def localProps = new Properties()
+        localProps.load(localPropsFile.newDataInputStream())
+
+        if (localProps['kestorePath'] != null) {
+            signingConfigs {
+                release {
+                    storeFile file(localProps["kestorePath"])
+                    storePassword localProps["kestorePassword"]
+                    keyAlias localProps["kestoreAlias"]
+                    keyPassword localProps["kestoreKeyPassword"]
+                }
+            }
         }
     }
 
     sourceSets {
         main {
-            assets.srcDirs += "${localProps['depends']}/arm64-api21/usr/share/transmission"
+            assets.srcDirs += "${project.buildDir}/assets"
         }
     }
 
@@ -77,6 +85,10 @@ android {
         }
     }
 
+    applicationVariants.all { v ->
+        tasks["merge${v.name.capitalize()}Assets"].dependsOn(generateAssets)
+    }
+
     lintOptions {
         disable 'MissingTranslation'
     }
@@ -92,4 +104,43 @@ dependencies {
 
 task cleanAll(type: Delete) {
     delete project.buildDir
+    delete file(".cxx")
+}
+
+task generateAssets() {
+    doLast {
+        def webDir = "${project.buildDir}/assets/web"
+        def arch = file("${project.buildDir}/web-control.tar.gz")
+
+        if (!arch.isFile()) {
+            def url = new URL('https://github.com/ronggang/transmission-web-control/archive/master.tar.gz')
+            url.withInputStream { i -> arch.withOutputStream { it << i } }
+        }
+
+        copy {
+            from "${project.buildDir}/transmission/web"
+            into webDir
+            exclude '*.am', '*.in', '*.scss'
+        }
+
+        copy {
+            from "${webDir}/index.html"
+            into webDir
+            rename 'index.html', 'index.original.html'
+        }
+
+        copy {
+            from(tarTree(arch)) {
+                include 'transmission-web-control-master/src/**'
+                includeEmptyDirs = false
+                eachFile { fcd ->
+                    fcd.relativePath = new RelativePath(!fcd.isDirectory(),
+                            (String[]) fcd.relativePath.segments.drop(2))
+                }
+            }
+
+            into webDir
+            rename 'index.html', 'index.webcontrol.html'
+        }
+    }
 }
