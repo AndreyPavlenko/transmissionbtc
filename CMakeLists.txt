@@ -7,6 +7,7 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif ()
 
 set(EXT_C_FLAGS "-DANDROID -fno-unwind-tables -no-canonical-prefixes -D_FORTIFY_SOURCE=1")
+set(EXT_CXX_FLAGS "${EXT_C_FLAGS} -fno-exceptions -fno-rtti")
 set(EXT_EXE_LINKER_FLAGS "-Wl,--exclude-libs,libgcc.a -Wl,--exclude-libs,libgcc_real.a \
                           -Wl,--exclude-libs,libatomic.a -Wl,--gc-sections -static-libstdc++")
 
@@ -34,6 +35,7 @@ set(EXT_CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
         -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
         -DCMAKE_DEBUG_POSTFIX=''
         -DCMAKE_C_FLAGS=${EXT_C_FLAGS}
+        -DCMAKE_CXX_FLAGS=${EXT_CXX_FLAGS}
         -DCMAKE_EXE_LINKER_FLAGS=${EXT_EXE_LINKER_FLAGS}
         )
 

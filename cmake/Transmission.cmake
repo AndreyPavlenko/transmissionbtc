@@ -14,13 +14,7 @@ set(TR_LIBRARIES
         "${TR_BUILD_DIR}/third-party/b64/lib/libb64.a"
         "${TR_BUILD_DIR}/third-party/natpmp/lib/libnatpmp.a"
         "${TR_BUILD_DIR}/third-party/miniupnpc/lib/libminiupnpc.a"
-        )
-
-if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR ANDROID_ABI MATCHES "armeabi" OR ANDROID_ABI STREQUAL "x86")
-    set(TR_CMAKE_ARGS ${TR_CMAKE_ARGS} -DENABLE_UTP=OFF)
-else ()
-    set(TR_LIBRARIES ${TR_LIBRARIES} "${TR_BUILD_DIR}/third-party/utp/lib/libutp.a")
-endif ()
+        "${TR_BUILD_DIR}/third-party/utp/lib/libutp.a")
 
 set(TR_INCLUDE_DIR "${TR_SRC_DIR}" "${TR_BUILD_DIR}")
 
