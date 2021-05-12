@@ -37,7 +37,7 @@ public class TransmissionService extends Service {
   private static final String DELAY = "delay";
   private static final String TAG = TransmissionService.class.getName();
   private static final Collection<Runnable> listeners = synchronizedSet(
-      newSetFromMap(new WeakHashMap<Runnable, Boolean>()));
+      newSetFromMap(new WeakHashMap<>()));
   private static volatile Transmission transmission;
   private static List<Runnable> runOnStart;
   private static List<Runnable> runOnStop;
@@ -64,7 +64,12 @@ public class TransmissionService extends Service {
     } else {
       Intent i = new Intent(context, TransmissionService.class);
       if (delay > 0) i.putExtra(DELAY, delay);
-      context.startService(i);
+
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        context.startForegroundService(i);
+      } else {
+        context.startService(i);
+      }
     }
   }
 

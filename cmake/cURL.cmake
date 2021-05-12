@@ -16,7 +16,7 @@ ProcessorCount(NCPU)
 find_program(MAKE_EXE NAMES make gmake nmake)
 
 ExternalProject_Add(curl
-        URL "https://curl.haxx.se/download/curl-7.73.0.tar.xz"
+        URL "https://curl.se/download/curl-7.76.1.tar.xz"
         PREFIX curl
         BUILD_IN_SOURCE 1
         CONFIGURE_COMMAND ${CMAKE_COMMAND} ${CURL_CMAKE_ARGS}

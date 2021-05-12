@@ -14,7 +14,7 @@ ProcessorCount(NCPU)
 find_program(MAKE_EXE NAMES make gmake nmake)
 
 ExternalProject_Add(libevent
-        URL "https://github.com/libevent/libevent/releases/download/release-2.1.11-stable/libevent-2.1.11-stable.tar.gz"
+        URL "https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz"
         PREFIX libevent
         BUILD_IN_SOURCE 1
         CONFIGURE_COMMAND ${CMAKE_COMMAND} ${EVENT_CMAKE_ARGS}

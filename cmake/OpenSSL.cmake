@@ -37,7 +37,7 @@ set(OPENSSL_INCLUDE_DIR "${OPENSSL_ROOT_DIR}/include")
 message(STATUS "OpenSSL config: ${OPENSSL_CONFIGURE_OPTS}")
 
 ExternalProject_Add(openssl
-        URL "https://www.openssl.org/source/openssl-1.1.1h.tar.gz"
+        URL "https://www.openssl.org/source/openssl-1.1.1k.tar.gz"
         PREFIX openssl
         BUILD_IN_SOURCE 1
         CONFIGURE_COMMAND ${OPENSSL_CONFIGURE_CMD} ${OPENSSL_CONFIGURE_OPTS}
