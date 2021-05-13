@@ -6,7 +6,8 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
 endif ()
 
-set(EXT_C_FLAGS "-DANDROID -fno-unwind-tables -no-canonical-prefixes -D_FORTIFY_SOURCE=1")
+set(EXT_C_FLAGS "-DANDROID -fno-unwind-tables -no-canonical-prefixes -D_FORTIFY_SOURCE=1 \
+                 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES=1")
 set(EXT_CXX_FLAGS "${EXT_C_FLAGS} -fno-exceptions -fno-rtti")
 set(EXT_EXE_LINKER_FLAGS "-Wl,--exclude-libs,libgcc.a -Wl,--exclude-libs,libgcc_real.a \
                           -Wl,--exclude-libs,libatomic.a -Wl,--gc-sections -static-libstdc++")
