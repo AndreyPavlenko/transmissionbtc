@@ -37,9 +37,10 @@ set(OPENSSL_INCLUDE_DIR "${OPENSSL_ROOT_DIR}/include")
 message(STATUS "OpenSSL config: ${OPENSSL_CONFIGURE_OPTS}")
 
 ExternalProject_Add(openssl
-        URL "https://www.openssl.org/source/openssl-1.1.1k.tar.gz"
+        URL "https://www.openssl.org/source/openssl-1.1.1j.tar.gz"
         PREFIX openssl
         BUILD_IN_SOURCE 1
+        PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/patches/openssl_ndk22.patch
         CONFIGURE_COMMAND ${OPENSSL_CONFIGURE_CMD} ${OPENSSL_CONFIGURE_OPTS}
         BUILD_COMMAND ${OPENSSL_BUILD_CMD}
         INSTALL_COMMAND ${MAKE_EXE} install_sw DESTDIR=${OPENSSL_INSTALL_DIR}
