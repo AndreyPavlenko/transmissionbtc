@@ -2,7 +2,6 @@ package com.ap.transmission.btc.activities;
 
 import android.Manifest.permission;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
@@ -72,7 +71,7 @@ public class MainActivity extends ActivityBase {
         tab.setIcon(tabs[pos].getActiveIcon());
         setTitle(tabs[pos].getTitle());
 
-        if (!Utils.isBasic() && (tab.getPosition() == 0)) {
+        if (tab.getPosition() == 0) {
           TorrentsList l = findViewById(R.id.torrents_list);
           if (l != null) l.setActive(true);
         }
@@ -82,14 +81,15 @@ public class MainActivity extends ActivityBase {
       public void onTabUnselected(TabLayout.Tab tab) {
         tab.setIcon(tabs[tab.getPosition()].getIcon());
 
-        if (!Utils.isBasic() && (tab.getPosition() == 0)) {
+        if (tab.getPosition() == 0) {
           TorrentsList l = findViewById(R.id.torrents_list);
           if (l != null) l.setActive(false);
         }
       }
 
       @Override
-      public void onTabReselected(TabLayout.Tab tab) {}
+      public void onTabReselected(TabLayout.Tab tab) {
+      }
     });
 
     List<String> perms = Arrays.asList(permission.INTERNET, permission.ACCESS_NETWORK_STATE,
@@ -108,12 +108,9 @@ public class MainActivity extends ActivityBase {
       AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
       alertBuilder.setTitle(R.string.location_perm_title);
       alertBuilder.setMessage(R.string.location_perm_msg);
-      alertBuilder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-          checkPermission(l.toArray(new String[l.size()]));
-          findViewById(R.id.button_start_stop).requestFocus();
-        }
+      alertBuilder.setPositiveButton(android.R.string.yes, (dialog, which) -> {
+        checkPermission(l.toArray(new String[l.size()]));
+        findViewById(R.id.button_start_stop).requestFocus();
       });
       alertBuilder.create().show();
     } else {
@@ -125,7 +122,7 @@ public class MainActivity extends ActivityBase {
   @Override
   protected void onStop() {
     super.onStop();
-    if (!Utils.isBasic() && (tabLayout.getSelectedTabPosition() == 0)) {
+    if (tabLayout.getSelectedTabPosition() == 0) {
       TorrentsList l = findViewById(R.id.torrents_list);
       if (l != null) l.setActive(false);
     }
@@ -134,7 +131,7 @@ public class MainActivity extends ActivityBase {
   @Override
   protected void onStart() {
     super.onStart();
-    if (!Utils.isBasic() && (tabLayout.getSelectedTabPosition() == 0)) {
+    if (tabLayout.getSelectedTabPosition() == 0) {
       TorrentsList l = findViewById(R.id.torrents_list);
       if (l != null) l.setActive(true);
     }
@@ -180,16 +177,13 @@ public class MainActivity extends ActivityBase {
     Intent intent = new Intent(getApplicationContext(), SelectFileActivity.class);
     intent.putExtra(SelectFileActivity.REQUEST_FILE, true);
     intent.putExtra(SelectFileActivity.REQUEST_PATTERN, ".+\\.torrent");
-    setActivityResultHandler(new ActivityResultHandler() {
-      @Override
-      public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode != SelectFileActivity.RESULT_OK) return true;
-        File f = (File) data.getSerializableExtra(SelectFileActivity.RESULT_FILE);
-        Intent intent = new Intent(getApplicationContext(), DownloadTorrentActivity.class);
-        intent.setData(Uri.fromFile(f));
-        startActivity(intent);
-        return true;
-      }
+    setActivityResultHandler((requestCode, resultCode, data) -> {
+      if (resultCode != SelectFileActivity.RESULT_OK) return true;
+      File f = (File) data.getSerializableExtra(SelectFileActivity.RESULT_FILE);
+      Intent intent1 = new Intent(getApplicationContext(), DownloadTorrentActivity.class);
+      intent1.setData(Uri.fromFile(f));
+      startActivity(intent1);
+      return true;
     });
     startActivityForResult(intent, ADD_FILE);
   }
@@ -200,27 +194,19 @@ public class MainActivity extends ActivityBase {
     builder.setTitle(R.string.torrent_link);
     builder.setView(input);
 
-    builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-      @Override
-      public void onClick(DialogInterface dialog, int which) {
-        String text = input.getText().toString().trim();
+    builder.setPositiveButton(android.R.string.ok, (dialog, which) -> {
+      String text = input.getText().toString().trim();
 
-        if (text.isEmpty()) {
-          Utils.showMsg(input, R.string.msg_enter_link);
-          addLink();
-        } else {
-          Intent intent = new Intent(getApplicationContext(), DownloadTorrentActivity.class);
-          intent.setData(Uri.parse(text));
-          startActivity(intent);
-        }
+      if (text.isEmpty()) {
+        Utils.showMsg(input, R.string.msg_enter_link);
+        addLink();
+      } else {
+        Intent intent = new Intent(getApplicationContext(), DownloadTorrentActivity.class);
+        intent.setData(Uri.parse(text));
+        startActivity(intent);
       }
     });
-    builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-      @Override
-      public void onClick(DialogInterface dialog, int which) {
-        dialog.cancel();
-      }
-    });
+    builder.setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel());
     builder.show();
   }
 
@@ -306,21 +292,14 @@ public class MainActivity extends ActivityBase {
   }
 
   static {
-    if (Utils.isBasic()) {
-      tabs = new TabInfo[]{
-          new TabInfo(R.string.title_settings, R.drawable.settings, R.drawable.settings_active, R.layout.settings),
-          new TabInfo(R.string.title_about, R.drawable.about, R.drawable.about_active, R.layout.about),
-      };
-    } else {
-      tabs = new TabInfo[]{
-          new TabInfo(R.string.title_downloads, R.drawable.downloads, R.drawable.downloads_active, R.layout.downloads),
-          new TabInfo(R.string.title_settings, R.drawable.settings, R.drawable.settings_active, R.layout.settings),
-          new TabInfo(R.string.title_watch_dirs, R.drawable.watch, R.drawable.watch_active, R.layout.watch_dirs),
-          new TabInfo(R.string.title_proxy, R.drawable.proxy, R.drawable.proxy_active, R.layout.proxy),
-          // TODO: implement
-          // new TabInfo(R.string.title_rss, R.drawable.rss, R.drawable.rss_active, R.layout.rss),
-          new TabInfo(R.string.title_about, R.drawable.about, R.drawable.about_active, R.layout.about),
-      };
-    }
+    tabs = new TabInfo[]{
+        new TabInfo(R.string.title_downloads, R.drawable.downloads, R.drawable.downloads_active, R.layout.downloads),
+        new TabInfo(R.string.title_settings, R.drawable.settings, R.drawable.settings_active, R.layout.settings),
+        new TabInfo(R.string.title_watch_dirs, R.drawable.watch, R.drawable.watch_active, R.layout.watch_dirs),
+        new TabInfo(R.string.title_proxy, R.drawable.proxy, R.drawable.proxy_active, R.layout.proxy),
+        // TODO: implement
+        // new TabInfo(R.string.title_rss, R.drawable.rss, R.drawable.rss_active, R.layout.rss),
+        new TabInfo(R.string.title_about, R.drawable.about, R.drawable.about_active, R.layout.about),
+    };
   }
 }

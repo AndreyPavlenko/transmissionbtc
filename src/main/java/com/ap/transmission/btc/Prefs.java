@@ -9,7 +9,6 @@ import android.os.StatFs;
 import com.ap.transmission.btc.func.Function;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +26,6 @@ import static com.ap.transmission.btc.Prefs.K.ENABLE_SEQ_DOWNLOAD;
 import static com.ap.transmission.btc.Prefs.K.ENABLE_UPNP;
 import static com.ap.transmission.btc.Prefs.K.ENABLE_WATCH_DIR;
 import static com.ap.transmission.btc.Prefs.K.ENCR_MODE;
-import static com.ap.transmission.btc.Prefs.K.FOREGROUND;
 import static com.ap.transmission.btc.Prefs.K.HTTP_SERVER_PORT;
 import static com.ap.transmission.btc.Prefs.K.INCREASE_SO_BUF;
 import static com.ap.transmission.btc.Prefs.K.RPC_PASSWD;
@@ -47,18 +45,10 @@ import static com.ap.transmission.btc.Prefs.K.WIFI_SSID;
  */
 public class Prefs {
   public enum K {
-    SETTINGS_DIR(new Function<Prefs, Object>() {
-      public Object apply(Prefs p) { return p.getDefaultSettingsDir(); }
-    }),
-    DOWNLOAD_DIR(new Function<Prefs, Object>() {
-      public Object apply(Prefs p) { return p.getDefaultDownloadDir(); }
-    }),
-    PREV_DOWNLOAD_DIR(new Function<Prefs, Object>() {
-      public Object apply(Prefs p) { return p.getDownloadDir(); }
-    }),
-    WATCH_DIR(new Function<Prefs, Object>() {
-      public Object apply(Prefs p) { return p.getDefaultWatchDir(); }
-    }),
+    SETTINGS_DIR(Prefs::getDefaultSettingsDir),
+    DOWNLOAD_DIR(Prefs::getDefaultDownloadDir),
+    PREV_DOWNLOAD_DIR(Prefs::getDownloadDir),
+    WATCH_DIR(Prefs::getDefaultWatchDir),
     START_ON_BOOT(false),
     BOOT_DELAY(0),
     ENABLE_WATCH_DIR(false),
@@ -83,7 +73,6 @@ public class Prefs {
     HTTP_SERVER_PORT(9092),
     WIFI_ETH_ONLY(true),
     WIFI_SSID(""),
-    FOREGROUND(true),
     UUID(new Function<Prefs, Object>() {
       public Object apply(Prefs p) {
         String uuid = java.util.UUID.randomUUID().toString();
@@ -198,8 +187,6 @@ public class Prefs {
         return isWifiEthOnly();
       case WIFI_SSID:
         return getWifiSsid();
-      case FOREGROUND:
-        return isForeground();
       default:
         return getString(k);
     }
@@ -269,7 +256,7 @@ public class Prefs {
         setSeqDownloadEnabled((Boolean) value);
         break;
       case ENABLE_UPNP:
-        setUpnpEnabled(Boolean.valueOf(value.toString()));
+        setUpnpEnabled(Boolean.parseBoolean(value.toString()));
         break;
       case HTTP_SERVER_PORT:
         setHttpServerPort(value.toString());
@@ -279,9 +266,6 @@ public class Prefs {
         break;
       case WIFI_SSID:
         setWifiSsid(value.toString());
-        break;
-      case FOREGROUND:
-        setForeground((Boolean) value);
         break;
       default:
         putString(k, value.toString());
@@ -334,11 +318,7 @@ public class Prefs {
   }
 
   public boolean isWatchDirEnabled() {
-    if (Utils.isBasic()) {
-      return getBoolean(ENABLE_WATCH_DIR);
-    } else {
-      return prefs.getString(K.WATCH_DIR.id(0), null) != null;
-    }
+    return prefs.getString(K.WATCH_DIR.id(0), null) != null;
   }
 
   public void setWatchDirEnabled(boolean enabled) {
@@ -367,7 +347,6 @@ public class Prefs {
 
 
   public Map<String, String> getWatchDirs() {
-    if (Utils.isBasic()) return Collections.singletonMap(getWatchDir(), getDownloadDir());
     Map<String, String> m = new HashMap<>();
 
     for (int i = 0; ; i++) {
@@ -551,21 +530,13 @@ public class Prefs {
     putString(WIFI_SSID, list.toString().trim());
   }
 
-  public boolean isForeground() {
-    return getBoolean(FOREGROUND);
-  }
-
-  public void setForeground(boolean foreground) {
-    putBoolean(FOREGROUND, foreground);
-  }
-
   public String getUUID() {
     return getString(UUID);
   }
 
   public String getString(K k) {
     String s = prefs.getString(k.id(), null);
-    return (s == null) || s.isEmpty() ? k.<String>def(this) : s;
+    return (s == null) || s.isEmpty() ? k.def(this) : s;
   }
 
   public String getString(K k, int index, String def) {
@@ -614,7 +585,8 @@ public class Prefs {
   public void putInt(K k, CharSequence value) {
     try {
       putInt(k, Integer.parseInt(value.toString()));
-    } catch (NumberFormatException ignore) {}
+    } catch (NumberFormatException ignore) {
+    }
   }
 
   public void putInt(K k, int value) {
@@ -638,7 +610,8 @@ public class Prefs {
         if (f == null) continue;
         StatFs stat = new StatFs(f.getAbsolutePath());
         if (maxLen < stat.getTotalBytes()) max = f;
-      } catch (IllegalArgumentException ignore) {}
+      } catch (IllegalArgumentException ignore) {
+      }
     }
 
     return max;

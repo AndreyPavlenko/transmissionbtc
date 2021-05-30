@@ -47,54 +47,11 @@
                 app:select_dir="true"
                 app:title="@string/settings_dir" />
 
-            <!-- Watch dir -->
-            <!--TextView
-                android:layout_height="wrap_content"
-                android:layout_gravity="fill_horizontal"
-                android:text="@string/enable_watch_dir"
-                android:textStyle="bold"
-                android:visibility="@{h.basic}" />
-
-            <CheckBox
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:visibility="@{h.basic}"
-                app:pref="@{K.ENABLE_WATCH_DIR}" />
-
-            <TextView
-                android:layout_height="wrap_content"
-                android:layout_gravity="fill_horizontal"
-                android:text="@string/watch_interval"
-                android:textStyle="bold"
-                android:visibility="@{h.and(p.watchDirEnabled, h.basic)}" />
-
-            <EditText
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:gravity="right"
-                android:inputType="numberDecimal"
-                android:minEms="2"
-                android:visibility="@{h.and(p.watchDirEnabled, h.basic)}"
-                app:pref="@{K.WATCH_INTERVAL}" />
-
-            <com.ap.transmission.btc.views.BrowseView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_columnSpan="2"
-                android:layout_gravity="fill_horizontal"
-                android:visibility="@{h.and(p.watchDirEnabled, h.basic)}"
-                app:pref="@{K.WATCH_DIR}"
-                app:select_dir="true"
-                app:title="@string/watch_dir" /-->
-
             <!-- WiFi eth only -->
             <com.ap.transmission.btc.views.CheckBoxView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
-                android:visibility="@{!h.basic}"
                 app:pref="@{K.WIFI_ETH_ONLY}"
                 app:text="@string/wifi_eth_only" />
 
@@ -103,7 +60,7 @@
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
                 android:layout_gravity="fill_horizontal"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:text="@string/wifi_eth_only_ssid"
                 android:textStyle="bold"
                 android:visibility="@{p.wifiEthOnly}" />
@@ -112,7 +69,7 @@
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
                 android:layout_gravity="fill_horizontal"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:hint="Home WiFi, Guest WiFi"
                 android:inputType="text"
                 android:maxLines="1"
@@ -124,31 +81,20 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="fill_horizontal"
                 android:text="@string/encr_mode"
-                android:textStyle="bold"
-                android:visibility="@{!h.basic}" />
+                android:textStyle="bold" />
 
             <Spinner
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:gravity="right"
-                android:visibility="@{!h.basic}"
+                android:gravity="end"
                 app:pref="@{K.ENCR_MODE}" />
 
             <TableRow
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_columnSpan="2"
-                android:background="@drawable/separator"
-                android:visibility="@{!h.basic}" />
-
-            <!-- Start foreground -->
-            <com.ap.transmission.btc.views.CheckBoxView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_columnSpan="2"
-                app:pref="@{K.FOREGROUND}"
-                app:text="@string/start_foreground" />
+                android:background="@drawable/separator" />
 
             <!-- Start on boot -->
             <com.ap.transmission.btc.views.CheckBoxView
@@ -162,7 +108,7 @@
             <TextView
                 android:layout_height="wrap_content"
                 android:layout_gravity="fill_horizontal"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:text="@string/boot_delay"
                 android:textStyle="bold"
                 android:visibility="@{p.startOnBoot}" />
@@ -172,7 +118,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
                 android:focusable="true"
-                android:gravity="right"
+                android:gravity="end"
                 android:inputType="numberDecimal"
                 android:maxLength="5"
                 android:minEms="2"
@@ -183,7 +129,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_columnSpan="2"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:background="@drawable/separator"
                 android:visibility="@{p.startOnBoot}" />
 
@@ -192,7 +138,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
-                android:visibility="@{!h.basic}"
                 app:onClick="@{h::checkRoot}"
                 app:pref="@{K.INCREASE_SO_BUF}"
                 app:text="@string/increase_so_buf" />
@@ -202,7 +147,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
-                android:visibility="@{!h.basic}"
                 app:pref="@{K.ENABLE_SEQ_DOWNLOAD}"
                 app:text="@string/enable_seq_download" />
 
@@ -211,50 +155,48 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
-                android:visibility="@{!h.basic}"
                 app:pref="@{K.ENABLE_UPNP}"
                 app:text="@string/enable_upnp" />
 
             <TextView
                 android:layout_height="wrap_content"
                 android:layout_gravity="fill_horizontal"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:text="@string/http_port"
                 android:textStyle="bold"
-                android:visibility="@{h.and(!h.basic, p.upnpEnabled)}" />
+                android:visibility="@{p.upnpEnabled}" />
 
             <EditText
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:gravity="right"
+                android:gravity="end"
                 android:inputType="numberDecimal"
                 android:maxLength="5"
                 android:minEms="2"
-                android:visibility="@{h.and(!h.basic, p.upnpEnabled)}"
+                android:visibility="@{p.upnpEnabled}"
                 app:pref="@{K.HTTP_SERVER_PORT}" />
 
             <TableRow
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_columnSpan="2"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:background="@drawable/separator"
-                android:visibility="@{h.and(!h.basic, p.upnpEnabled)}" />
+                android:visibility="@{p.upnpEnabled}" />
 
             <!-- Enable RPC -->
             <com.ap.transmission.btc.views.CheckBoxView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
-                android:visibility="@{!h.basic}"
                 app:pref="@{K.ENABLE_RPC}"
                 app:text="@string/enable_rpc" />
 
             <TextView
                 android:layout_height="wrap_content"
                 android:layout_gravity="fill_horizontal"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:text="@string/rpc_port"
                 android:textStyle="bold"
                 android:visibility="@{p.rpcEnabled}" />
@@ -263,7 +205,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:gravity="right"
+                android:gravity="end"
                 android:inputType="numberDecimal"
                 android:maxLength="5"
                 android:minEms="2"
@@ -274,7 +216,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_columnSpan="2"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:background="@drawable/separator"
                 android:visibility="@{p.rpcEnabled}" />
 
@@ -283,7 +225,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:visibility="@{p.rpcEnabled}"
                 app:pref="@{K.ENABLE_ALT_WEB_UI}"
                 app:text="@string/enable_alt_web_ui" />
@@ -292,7 +234,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_columnSpan="2"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:background="@drawable/separator"
                 android:visibility="@{p.rpcEnabled}" />
 
@@ -301,7 +243,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:visibility="@{p.rpcEnabled}"
                 app:pref="@{K.ENABLE_RPC_AUTH}"
                 app:text="@string/auth_required" />
@@ -311,7 +253,7 @@
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
                 android:layout_gravity="fill_horizontal"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:text="@string/username"
                 android:textStyle="bold"
                 android:visibility="@{h.and(p.rpcEnabled, p.rpcAuthEnabled)}" />
@@ -320,7 +262,7 @@
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
                 android:layout_gravity="fill_horizontal"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:inputType="text"
                 android:maxLines="1"
                 android:visibility="@{h.and(p.rpcEnabled, p.rpcAuthEnabled)}"
@@ -331,7 +273,7 @@
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
                 android:layout_gravity="fill_horizontal"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:text="@string/password"
                 android:textStyle="bold"
                 android:visibility="@{h.and(p.rpcEnabled, p.rpcAuthEnabled)}" />
@@ -340,7 +282,7 @@
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
                 android:layout_gravity="fill_horizontal"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:inputType="textPassword"
                 android:maxLines="1"
                 android:visibility="@{h.and(p.rpcEnabled, p.rpcAuthEnabled)}"
@@ -351,7 +293,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:visibility="@{p.rpcEnabled}"
                 app:pref="@{K.ENABLE_RPC_WHITELIST}"
                 app:text="@string/enable_rpc_whitelist" />
@@ -360,7 +302,7 @@
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
                 android:layout_gravity="fill_horizontal"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:inputType="text"
                 android:maxLines="1"
                 android:visibility="@{h.and(p.rpcEnabled, p.rpcWhitelistEnabled)}"

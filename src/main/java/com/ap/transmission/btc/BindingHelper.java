@@ -39,14 +39,6 @@ public class BindingHelper implements OnSharedPreferenceChangeListener, Runnable
     return true;
   }
 
-  public boolean isPro() {
-    return Utils.isPro();
-  }
-
-  public boolean isBasic() {
-    return Utils.isBasic();
-  }
-
   public String getIp() {
     return Utils.getIPAddress(getActivity());
   }
@@ -70,16 +62,13 @@ public class BindingHelper implements OnSharedPreferenceChangeListener, Runnable
   public void startStopService(final View... disable) {
     final boolean running = isServiceRunning();
     for (View v : disable) v.setEnabled(false);
-    Runnable callback = new Runnable() {
-      @Override
-      public void run() {
-        for (View v : disable) v.setEnabled(true);
-        isServiceRunning = TransmissionService.isRunning() ? (byte) 1 : 0;
-        invalidate();
+    Runnable callback = () -> {
+      for (View v : disable) v.setEnabled(true);
+      isServiceRunning = TransmissionService.isRunning() ? (byte) 1 : 0;
+      invalidate();
 
-        if (!running && !isServiceRunning()) {
-          Utils.showErr(disable[0], R.string.err_failed_to_start_transmission);
-        }
+      if (!running && !isServiceRunning()) {
+        Utils.showErr(disable[0], R.string.err_failed_to_start_transmission);
       }
     };
 

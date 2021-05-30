@@ -181,47 +181,11 @@ public class Transmission {
       if (hasDownloadingTorrents()) wakeLock();
 
       // Handle callbacks in a separate thread to avoid dead locks
-      Native.transmissionSetRpcCallbacks(new Runnable() {
-        @Override
-        public void run() {
-          getExecutor().submit(new Runnable() {
-            @Override
-            public void run() {
-              torrentAddedOrChanged();
-            }
-          });
-        }
-      }, new Runnable() {
-        @Override
-        public void run() {
-          getExecutor().submit(new Runnable() {
-            @Override
-            public void run() {
-              torrentRemoved();
-            }
-          });
-        }
-      }, new Runnable() {
-        @Override
-        public void run() {
-          getExecutor().submit(new Runnable() {
-            @Override
-            public void run() {
-              sessionChanged();
-            }
-          });
-        }
-      }, new Runnable() {
-        @Override
-        public void run() {
-          getExecutor().submit(new Runnable() {
-            @Override
-            public void run() {
-              cheduledAltSpeed();
-            }
-          });
-        }
-      });
+      Native.transmissionSetRpcCallbacks(
+          () -> getExecutor().submit(this::torrentAddedOrChanged),
+          () -> getExecutor().submit(this::torrentRemoved),
+          () -> getExecutor().submit(this::sessionChanged),
+          () -> getExecutor().submit(this::cheduledAltSpeed));
 
       ok = true;
     } finally {
@@ -241,16 +205,13 @@ public class Transmission {
 
       if (interval > 0) {
         ScheduledExecutorService sched = getScheduler();
-        sched.scheduleWithFixedDelay(new Runnable() {
-          @Override
-          public void run() {
-            readLock().lock();
-            try {
-              if (!isRunning() || (watchers == null)) return;
-              for (Watcher w : watchers) w.scan();
-            } finally {
-              readLock().unlock();
-            }
+        sched.scheduleWithFixedDelay(() -> {
+          readLock().lock();
+          try {
+            if (!isRunning() || (watchers == null)) return;
+            for (Watcher w : watchers) w.scan();
+          } finally {
+            readLock().unlock();
           }
         }, interval, interval, TimeUnit.SECONDS);
       }
@@ -544,7 +505,10 @@ public class Transmission {
     } catch (IOException ex) {
       err(TAG, ex, "Failed to open asset: %s", file);
     } finally {
-      if (in != null) try { in.close(); } catch (IOException ignore) {}
+      if (in != null) try {
+        in.close();
+      } catch (IOException ignore) {
+      }
     }
   }
 
@@ -556,7 +520,7 @@ public class Transmission {
       try {
         if ((exec = executor) == null) {
           executor = exec = new ThreadPoolExecutor(0,
-              30, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+              30, 60L, TimeUnit.SECONDS, new SynchronousQueue<>(),
               Executors.defaultThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
         }
       } finally {
@@ -575,7 +539,8 @@ public class Transmission {
     try {
       exec.shutdownNow();
       exec.awaitTermination(30, TimeUnit.SECONDS);
-    } catch (InterruptedException ignore) {}
+    } catch (InterruptedException ignore) {
+    }
   }
 
   public ScheduledExecutorService getScheduler() {
@@ -604,7 +569,8 @@ public class Transmission {
     try {
       sched.shutdownNow();
       sched.awaitTermination(30, TimeUnit.SECONDS);
-    } catch (InterruptedException ignore) {}
+    } catch (InterruptedException ignore) {
+    }
   }
 
   @SuppressLint("WakelockTimeout")
@@ -618,24 +584,21 @@ public class Transmission {
       powerLock = pl;
       debug(TAG, "WakeLock acquired");
 
-      final ScheduledFuture<?> f[] = new ScheduledFuture[1];
-      f[0] = getScheduler().scheduleWithFixedDelay(new Runnable() {
-        @Override
-        public void run() {
-          if (!hasDownloadingTorrents()) {
-            writeLock().lock();
-            try {
-              if (!isRunning()) {
-                wakeUnlock();
-                f[0].cancel(false);
-              } else if (!Native.transmissionHasDownloadingTorrents(session)) {
-                debug(TAG, "No active downloads - releasing WakeLock");
-                wakeUnlock();
-                f[0].cancel(false);
-              }
-            } finally {
-              writeLock().unlock();
+      final ScheduledFuture<?>[] f = new ScheduledFuture[1];
+      f[0] = getScheduler().scheduleWithFixedDelay(() -> {
+        if (!hasDownloadingTorrents()) {
+          writeLock().lock();
+          try {
+            if (!isRunning()) {
+              wakeUnlock();
+              f[0].cancel(false);
+            } else if (!Native.transmissionHasDownloadingTorrents(session)) {
+              debug(TAG, "No active downloads - releasing WakeLock");
+              wakeUnlock();
+              f[0].cancel(false);
             }
+          } finally {
+            writeLock().unlock();
           }
         }
       }, 1, 1, TimeUnit.MINUTES);

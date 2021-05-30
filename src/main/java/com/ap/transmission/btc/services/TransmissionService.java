@@ -1,6 +1,5 @@
 package com.ap.transmission.btc.services;
 
-import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -65,6 +64,8 @@ public class TransmissionService extends Service {
       Intent i = new Intent(context, TransmissionService.class);
       if (delay > 0) i.putExtra(DELAY, delay);
 
+      Log.i(TAG, "Starting service");
+
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         context.startForegroundService(i);
       } else {
@@ -90,6 +91,7 @@ public class TransmissionService extends Service {
     if (runNow) {
       if (callback != null) callback.run();
     } else {
+      Log.i(TAG, "Stopping service");
       context.stopService(new Intent(context, TransmissionService.class));
     }
   }
@@ -134,14 +136,10 @@ public class TransmissionService extends Service {
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
     if (!isRunning()) {
-      if (transmission.getPrefs().isForeground()) {
-        runOnStart(new Runnable() {
-          @Override
-          public void run() {
-            foreground();
-          }
-        });
-      }
+      Log.i(TAG, "Start command received");
+      Notification n = buildNotification(getApplicationContext(), false);
+      startForeground(NOTIFICATION_ID, n);
+      runOnStart(TransmissionService::updateNotification);
 
       final int delay = (intent == null) ? 0 : intent.getIntExtra(DELAY, 0);
       new StartTask(delay).execute((Void) null);
@@ -155,15 +153,9 @@ public class TransmissionService extends Service {
     runOnStart.add(run);
   }
 
-  @SuppressLint("ObsoleteSdkInt")
-  private void foreground() {
-    Notification n = buildNotification(getApplicationContext(), !transmission.isSuspended());
-    startForeground(NOTIFICATION_ID, n);
-  }
-
   public static void updateNotification() {
     Transmission tr = transmission;
-    if ((tr == null) || !transmission.getPrefs().isForeground()) return;
+    if (tr == null) return;
     Context ctx = tr.getContext();
     NotificationManager nmgr = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
     if (nmgr == null) return;
@@ -171,7 +163,6 @@ public class TransmissionService extends Service {
     nmgr.notify(NOTIFICATION_ID, n);
   }
 
-  @SuppressLint("ObsoleteSdkInt")
   static Notification buildNotification(Context ctx, boolean running) {
     String ip = Utils.getIPAddress(ctx);
     Intent i = new Intent(ctx, MainActivity.class);
@@ -198,12 +189,7 @@ public class TransmissionService extends Service {
       }
     }
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-      return b.build();
-    } else {
-      //noinspection deprecation
-      return b.getNotification();
-    }
+    return b.build();
   }
 
   private static final class StartTask extends AsyncTask<Void, Integer, List<Runnable>> {
@@ -219,7 +205,8 @@ public class TransmissionService extends Service {
         try {
           Log.i(TAG, "Waiting " + delay + " seconds before start");
           Thread.sleep(delay * 1000);
-        } catch (InterruptedException ignore) {}
+        } catch (InterruptedException ignore) {
+        }
       }
 
       Transmission t;

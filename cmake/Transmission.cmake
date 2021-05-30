@@ -6,7 +6,7 @@ option(TR_SRC_DIR "Transmission sources" "${CMAKE_CURRENT_BINARY_DIR}/transmissi
 set(TR_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/transmission/src/transmission-build")
 set(TR_CMAKE_ARGS -DENABLE_TESTS=OFF -DENABLE_DAEMON=OFF -DINSTALL_DOC=OFF -DENABLE_UTILS=OFF
         -DENABLE_CLI=OFF -DENABLE_GTK=OFF -DENABLE_QT=OFF -DENABLE_MAC=OFF -DINSTALL_DOC=OFF
-        ${EXT_CMAKE_ARGS})
+        -DENABLE_WEB=ON ${EXT_CMAKE_ARGS})
 
 set(TR_LIBRARIES
         "${TR_BUILD_DIR}/libtransmission/libtransmission.a"
@@ -31,7 +31,7 @@ ExternalProject_Add(transmission
         GIT_SUBMODULES_RECURSE 1
         CONFIGURE_COMMAND ${CMAKE_COMMAND} ${TR_SRC_DIR} ${TR_CMAKE_ARGS}
         BUILD_COMMAND ${MAKE_EXE} -j${NCPU}
-        INSTALL_COMMAND echo "Skip install"
+        INSTALL_COMMAND ${MAKE_EXE} install "DESTDIR=${TR_WEB_INSTALL_DIR}"
         BUILD_BYPRODUCTS ${TR_LIBRARIES})
 
 add_dependencies(transmission openssl curl libevent)

@@ -91,8 +91,6 @@ public class Utils {
   public static final Charset UTF8 = Charset.forName("UTF-8");
   private static final String TAG = Utils.class.getName();
   @SuppressWarnings("ConstantConditions")
-  private static final boolean isPro = BUILD_TYPE.endsWith("pro");
-  private static final boolean isBasic = BUILD_TYPE.endsWith("basic");
   private static final boolean isDebugEnabled = BUILD_TYPE.startsWith("debug");
   private static volatile InetAddress ifaddr;
 
@@ -220,6 +218,8 @@ public class Utils {
     if (VERSION.SDK_INT < VERSION_CODES.LOLLIPOP) return null;
     ParcelFileDescriptor pfd = null;
     DocumentFile dir = DocumentFile.fromTreeUri(ctx, dirUri);
+    if (dir == null) return null;
+
     String rndName = "transmissionbtc-" + UUID.randomUUID() + ".tmp";
     DocumentFile f = dir.createFile(StorageAccess.MIME_TYPE, rndName);
 
@@ -292,14 +292,6 @@ public class Utils {
       if (f != null) //noinspection ResultOfMethodCallIgnored
         f.delete();
     }
-  }
-
-  public static boolean isPro() {
-    return isPro;
-  }
-
-  public static boolean isBasic() {
-    return isBasic;
   }
 
   public static boolean isDebugEnabled() {
@@ -437,19 +429,11 @@ public class Utils {
       File dst = new File(dstDir, src);
       debug(TAG, "Copying assets %s -> %s", src, dst);
       mkdirs(dst.getParentFile());
-      InputStream in = null;
-      OutputStream out = null;
 
-      try {
-        in = amgr.open(src);
-        out = new FileOutputStream(dst);
-
+      try (InputStream in = amgr.open(src); OutputStream out = new FileOutputStream(dst)) {
         for (int i = in.read(buf); i != -1; i = in.read(buf)) {
           out.write(buf, 0, i);
         }
-      } finally {
-        if (in != null) in.close();
-        if (out != null) out.close();
       }
     }
   }
@@ -474,15 +458,11 @@ public class Utils {
       @Override
       public void run() {
         if (script != null) {
-          OutputStream out = p.getOutputStream();
-          byte[] buf = new byte[1024];
-
-          try {
+          try (OutputStream out = p.getOutputStream()) {
+            byte[] buf = new byte[1024];
             for (int i = script.read(buf); i != -1; i = script.read(buf)) out.write(buf, 0, i);
           } catch (IOException ex) {
             Log.e(TAG, ex.getMessage(), ex);
-          } finally {
-            try { out.close(); } catch (IOException ignore) {}
           }
         }
 
@@ -516,9 +496,8 @@ public class Utils {
     }
   }
 
-  @SuppressWarnings("unchecked")
   public static Collection<File> splitPath(File path, boolean readable) {
-    Deque q = new LinkedList();
+    Deque<File> q = new LinkedList<>();
     q.addFirst(path);
 
     for (File p = path.getParentFile(); p != null; p = p.getParentFile()) {
@@ -656,7 +635,6 @@ public class Utils {
     return (fileExt == null) ? null : MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExt);
   }
 
-  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   public static boolean isWifiEthActive(Context context, String allowedNetworks) {
     Context ctx = context.getApplicationContext();
     ConnectivityManager cmgr = (ConnectivityManager) ctx.getSystemService(CONNECTIVITY_SERVICE);
