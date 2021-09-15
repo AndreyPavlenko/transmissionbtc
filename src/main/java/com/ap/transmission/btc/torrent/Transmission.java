@@ -1,5 +1,17 @@
 package com.ap.transmission.btc.torrent;
 
+import static com.ap.transmission.btc.Utils.configureProxy;
+import static com.ap.transmission.btc.Utils.copyAssets;
+import static com.ap.transmission.btc.Utils.debug;
+import static com.ap.transmission.btc.Utils.err;
+import static com.ap.transmission.btc.Utils.info;
+import static com.ap.transmission.btc.Utils.mkdirs;
+import static com.ap.transmission.btc.torrent.Transmission.AddTorrentResult.DUPLICATE;
+import static com.ap.transmission.btc.torrent.Transmission.AddTorrentResult.NOT_STARTED;
+import static com.ap.transmission.btc.torrent.Transmission.AddTorrentResult.OK;
+import static com.ap.transmission.btc.torrent.Transmission.AddTorrentResult.OK_DELETE;
+import static com.ap.transmission.btc.torrent.Transmission.AddTorrentResult.PARSE_ERR;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -38,18 +50,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import static com.ap.transmission.btc.Utils.configureProxy;
-import static com.ap.transmission.btc.Utils.copyAssets;
-import static com.ap.transmission.btc.Utils.debug;
-import static com.ap.transmission.btc.Utils.err;
-import static com.ap.transmission.btc.Utils.info;
-import static com.ap.transmission.btc.Utils.mkdirs;
-import static com.ap.transmission.btc.torrent.Transmission.AddTorrentResult.DUPLICATE;
-import static com.ap.transmission.btc.torrent.Transmission.AddTorrentResult.NOT_STARTED;
-import static com.ap.transmission.btc.torrent.Transmission.AddTorrentResult.OK;
-import static com.ap.transmission.btc.torrent.Transmission.AddTorrentResult.OK_DELETE;
-import static com.ap.transmission.btc.torrent.Transmission.AddTorrentResult.PARSE_ERR;
 
 /**
  * @author Andrey Pavlenko
@@ -204,17 +204,12 @@ public class Transmission {
       }
 
       if (interval > 0) {
-        ScheduledExecutorService sched = getScheduler();
-        sched.scheduleWithFixedDelay(() -> {
-          readLock().lock();
-          try {
-            if (!isRunning() || (watchers == null)) return;
-            for (Watcher w : watchers) w.scan();
-          } finally {
-            readLock().unlock();
-          }
-        }, interval, interval, TimeUnit.SECONDS);
-      }
+				ScheduledExecutorService sched = getScheduler();
+				sched.scheduleWithFixedDelay(() -> {
+					if (!isRunning() || (watchers == null)) return;
+					for (Watcher w : watchers) w.scan();
+				}, interval, interval, TimeUnit.SECONDS);
+			}
     }
   }
 

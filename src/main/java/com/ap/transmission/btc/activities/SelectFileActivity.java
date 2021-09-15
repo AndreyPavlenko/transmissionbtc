@@ -1,5 +1,17 @@
 package com.ap.transmission.btc.activities;
 
+import static android.os.Build.VERSION.SDK_INT;
+import static android.os.Build.VERSION_CODES;
+import static android.os.Build.VERSION_CODES.KITKAT;
+import static android.os.Build.VERSION_CODES.LOLLIPOP;
+import static android.os.Build.VERSION_CODES.N;
+import static android.os.Build.VERSION_CODES.Q;
+import static android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION;
+import static com.ap.transmission.btc.Utils.err;
+import static com.ap.transmission.btc.Utils.hasWritePerms;
+import static com.ap.transmission.btc.Utils.showErr;
+import static com.ap.transmission.btc.Utils.showMsg;
+
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ListActivity;
@@ -48,22 +60,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import static android.os.Build.VERSION;
-import static android.os.Build.VERSION.SDK_INT;
-import static android.os.Build.VERSION_CODES;
-import static android.os.Build.VERSION_CODES.KITKAT;
-import static android.os.Build.VERSION_CODES.LOLLIPOP;
-import static android.os.Build.VERSION_CODES.N;
-import static android.os.Build.VERSION_CODES.Q;
-import static com.ap.transmission.btc.Utils.err;
-import static com.ap.transmission.btc.Utils.hasWritePerms;
-import static com.ap.transmission.btc.Utils.showErr;
-import static com.ap.transmission.btc.Utils.showMsg;
-
 /**
  * @author Andrey Pavlenko
  */
 public class SelectFileActivity extends ListActivity {
+  private static final String TAG = SelectFileActivity.class.getName();
   public static final String REQUEST_FILE = "file";
   public static final String REQUEST_DIR = "dir";
   public static final String REQUEST_WRITABLE = "writable";
@@ -100,10 +101,27 @@ public class SelectFileActivity extends ListActivity {
     dirsOnly = i.getBooleanExtra(REQUEST_DIR, false);
     writable = i.getBooleanExtra(REQUEST_WRITABLE, false);
 
-    if (dirsOnly && writable && useOpenDocumentTree()) {
+    if ((SDK_INT >= LOLLIPOP) && dirsOnly && writable && useOpenDocumentTree()) {
       Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-      startActivityForResult(intent, REQ_DOC);
-      return;
+
+      try {
+        startActivityForResult(intent, REQ_DOC);
+        return;
+      } catch (ActivityNotFoundException ex) {
+        Utils.err(TAG, ex, "Failed to open document tree");
+      }
+    }
+
+    if ((SDK_INT >= VERSION_CODES.R) && !Environment.isExternalStorageManager()) {
+      Intent req = new Intent(ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+      Uri uri = Uri.fromParts("package", getPackageName(), null);
+      req.setData(uri);
+
+      try {
+        startActivity(req);
+      } catch (ActivityNotFoundException ex) {
+        Utils.err(TAG, ex, "Failed to request %s", ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+      }
     }
 
     pattern = (ptrn == null) ? null : Pattern.compile(ptrn);
@@ -117,25 +135,12 @@ public class SelectFileActivity extends ListActivity {
     newFolderButton = findViewById(R.id.button_new_folder);
     pathText = findViewById(R.id.path);
 
-    okButton.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        ok();
-      }
+    okButton.setOnClickListener(this::onClick);
+    cancelButton.setOnClickListener(v -> {
+      setResult(RESULT_CANCEL);
+      finish();
     });
-    cancelButton.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        setResult(RESULT_CANCEL);
-        finish();
-      }
-    });
-    newFolderButton.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        newFolder();
-      }
-    });
+    newFolderButton.setOnClickListener(v -> newFolder());
 
     pathText.addTextChangedListener(new TextWatcher() {
       @Override
@@ -477,6 +482,10 @@ public class SelectFileActivity extends ListActivity {
     return b == 1;
   }
 
+  private void onClick(View v) {
+    ok();
+  }
+
   private final class Adapter extends BaseAdapter {
     private LayoutInflater inflater = LayoutInflater.from(SelectFileActivity.this);
 
@@ -521,7 +530,7 @@ public class SelectFileActivity extends ListActivity {
         File f = (File) item;
         img = R.drawable.storage;
 
-        if (VERSION.SDK_INT >= VERSION_CODES.N) {
+        if (SDK_INT >= VERSION_CODES.N) {
           StorageVolume v;
           StorageManager sm = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
 
@@ -554,7 +563,7 @@ public class SelectFileActivity extends ListActivity {
   public Collection<File> getRoots() {
     Set<File> files = new HashSet<>();
 
-    if (VERSION.SDK_INT >= VERSION_CODES.N) {
+    if (SDK_INT >= VERSION_CODES.N) {
       StorageManager sm = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
 
       if (sm != null) {
@@ -578,15 +587,15 @@ public class SelectFileActivity extends ListActivity {
     addRoot(files, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES));
     addRoot(files, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC));
 
-    if (VERSION.SDK_INT >= VERSION_CODES.KITKAT) {
+    if (SDK_INT >= VERSION_CODES.KITKAT) {
       addRoot(files, getObbDirs());
       addRoot(files, getExternalCacheDirs());
       addRoot(files, getExternalFilesDirs(null));
 
-      if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
+      if (SDK_INT >= LOLLIPOP) {
         addRoot(files, getExternalMediaDirs());
       }
-      if (VERSION.SDK_INT >= VERSION_CODES.N) {
+      if (SDK_INT >= VERSION_CODES.N) {
         addRoot(files, getDataDir());
       }
     } else {

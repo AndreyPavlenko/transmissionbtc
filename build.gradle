@@ -1,5 +1,5 @@
-def version = '1.3.7'
-def versionNum = 9000015
+def version = '1.3.8'
+def versionNum = 9000017
 def webInstallDir = "${project.buildDir}/web"
 
 buildscript {
@@ -9,7 +9,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.2.1'
+        classpath 'com.android.tools.build:gradle:4.2.2'
     }
 }
 
@@ -26,7 +26,7 @@ android {
 
     defaultConfig {
         applicationId 'com.ap.transmission.btc'
-        minSdkVersion 21
+        minSdkVersion 19
         targetSdkVersion 30
         compileSdkVersion 30
         versionCode versionNum
@@ -38,8 +38,10 @@ android {
         }
 
         ndk {
+            def abi = project.properties['ABI']
+            def filters = (abi != null) ? abi.split(",") : ['arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64']
             debugSymbolLevel 'FULL'
-            abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
+            abiFilters = filters
         }
     }
 
@@ -119,6 +121,12 @@ task mergeWebAssets() {
             def url = new URL('https://github.com/ronggang/transmission-web-control/archive/master.tar.gz')
             url.withInputStream { i -> arch.withOutputStream { it << i } }
         }
+
+        def md = java.security.MessageDigest.getInstance("SHA1")
+        arch.eachByte(1024 * 1024) { byte[] buf, int n -> md.update(buf, 0, n) }
+        def sha1 = new BigInteger(1, md.digest()).toString(16).padLeft( 40, '0' )
+        new File(webDir).mkdirs()
+        new File(webDir, 'checksum.sha1').write(sha1)
 
         copy {
             from "${webInstallDir}/usr/local/share/transmission/public_html"

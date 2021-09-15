@@ -6,6 +6,7 @@
 .project
 .classpath
 build/
+dist/
 *.iml
 gradle/
 gradlew

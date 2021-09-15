@@ -619,7 +619,7 @@ public class Utils {
 
   public static void runWithDelay(Runnable run, int delay) {
     final Handler handler = new Handler();
-    handler.postDelayed(run, delay * 1000);
+    handler.postDelayed(run, delay * 1000L);
   }
 
   public static String getFileExtension(String fileName) {

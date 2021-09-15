@@ -33,7 +33,6 @@ import static java.util.Collections.synchronizedSet;
  */
 public class TransmissionService extends Service {
   private static final int NOTIFICATION_ID = 1;
-  private static final String DELAY = "delay";
   private static final String TAG = TransmissionService.class.getName();
   private static final Collection<Runnable> listeners = synchronizedSet(
       newSetFromMap(new WeakHashMap<>()));
@@ -42,10 +41,6 @@ public class TransmissionService extends Service {
   private static List<Runnable> runOnStop;
 
   public static void start(Context context, Runnable callback) {
-    start(context, callback, 0);
-  }
-
-  public static void start(Context context, Runnable callback, int delay) {
     boolean runNow = false;
 
     synchronized (TransmissionService.class) {
@@ -62,8 +57,6 @@ public class TransmissionService extends Service {
       if (callback != null) callback.run();
     } else {
       Intent i = new Intent(context, TransmissionService.class);
-      if (delay > 0) i.putExtra(DELAY, delay);
-
       Log.i(TAG, "Starting service");
 
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -140,9 +133,7 @@ public class TransmissionService extends Service {
       Notification n = buildNotification(getApplicationContext(), false);
       startForeground(NOTIFICATION_ID, n);
       runOnStart(TransmissionService::updateNotification);
-
-      final int delay = (intent == null) ? 0 : intent.getIntExtra(DELAY, 0);
-      new StartTask(delay).execute((Void) null);
+      new StartTask().execute((Void) null);
     }
 
     return START_STICKY;
@@ -193,22 +184,9 @@ public class TransmissionService extends Service {
   }
 
   private static final class StartTask extends AsyncTask<Void, Integer, List<Runnable>> {
-    private final int delay;
-
-    private StartTask(int delay) {
-      this.delay = delay;
-    }
 
     @Override
     protected List<Runnable> doInBackground(Void... params) {
-      if (delay > 0) {
-        try {
-          Log.i(TAG, "Waiting " + delay + " seconds before start");
-          Thread.sleep(delay * 1000);
-        } catch (InterruptedException ignore) {
-        }
-      }
-
       Transmission t;
       List<Runnable> run;
 

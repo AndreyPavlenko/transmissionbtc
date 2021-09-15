@@ -1,5 +1,8 @@
 package com.ap.transmission.btc.activities;
 
+import static com.ap.transmission.btc.Utils.debug;
+import static com.ap.transmission.btc.Utils.isDebugEnabled;
+
 import android.Manifest.permission;
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -36,270 +39,276 @@ import java.util.List;
  * @author Andrey Pavlenko
  */
 public class MainActivity extends ActivityBase {
-  private static final int GRANT_PERM = 10;
-  private static final int ADD_FILE = 11;
-  private static final TabInfo[] tabs;
-  private TabLayout tabLayout;
-  private BindingHelper bindingHelper;
+	private static final String TAG = MainActivity.class.getName();
+	private static final int GRANT_PERM = 10;
+	private static final int ADD_FILE = 11;
+	private static final TabInfo[] tabs;
+	private TabLayout tabLayout;
+	private BindingHelper bindingHelper;
 
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    Prefs prefs = getPrefs();
-    MainBinding b = DataBindingUtil.setContentView(this, R.layout.main);
-    final ViewPager p = findViewById(R.id.pager);
-    tabLayout = findViewById(R.id.tabs);
-    bindingHelper = new BindingHelper(this, b);
-    tabLayout.addTab(tabLayout.newTab().setIcon(tabs[0].getActiveIcon()));
-    setTitle(tabs[0].getTitle());
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		Prefs prefs = getPrefs();
+		MainBinding b = DataBindingUtil.setContentView(this, R.layout.main);
+		final ViewPager p = findViewById(R.id.pager);
+		tabLayout = findViewById(R.id.tabs);
+		bindingHelper = new BindingHelper(this, b);
+		tabLayout.addTab(tabLayout.newTab().setIcon(tabs[0].getActiveIcon()));
+		setTitle(tabs[0].getTitle());
 
-    for (int i = 1; i < tabs.length; i++) {
-      tabLayout.addTab(tabLayout.newTab().setIcon(tabs[i].getIcon()));
-    }
+		for (int i = 1; i < tabs.length; i++) {
+			tabLayout.addTab(tabLayout.newTab().setIcon(tabs[i].getIcon()));
+		}
 
-    b.setH(bindingHelper);
-    b.setP(prefs);
-    p.setAdapter(new PageFragment.Adapter(getSupportFragmentManager(), tabs));
-    p.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
-    tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
-    tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+		b.setH(bindingHelper);
+		b.setP(prefs);
+		p.setAdapter(new PageFragment.Adapter(getSupportFragmentManager(), tabs));
+		p.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+		tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+		tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
 
-      @Override
-      public void onTabSelected(TabLayout.Tab tab) {
-        int pos = tab.getPosition();
-        p.setCurrentItem(pos);
-        tab.setIcon(tabs[pos].getActiveIcon());
-        setTitle(tabs[pos].getTitle());
+			@Override
+			public void onTabSelected(TabLayout.Tab tab) {
+				int pos = tab.getPosition();
+				p.setCurrentItem(pos);
+				tab.setIcon(tabs[pos].getActiveIcon());
+				setTitle(tabs[pos].getTitle());
 
-        if (tab.getPosition() == 0) {
-          TorrentsList l = findViewById(R.id.torrents_list);
-          if (l != null) l.setActive(true);
-        }
-      }
+				if (tab.getPosition() == 0) {
+					TorrentsList l = findViewById(R.id.torrents_list);
+					if (l != null) l.setActive(true);
+				}
+			}
 
-      @Override
-      public void onTabUnselected(TabLayout.Tab tab) {
-        tab.setIcon(tabs[tab.getPosition()].getIcon());
+			@Override
+			public void onTabUnselected(TabLayout.Tab tab) {
+				tab.setIcon(tabs[tab.getPosition()].getIcon());
 
-        if (tab.getPosition() == 0) {
-          TorrentsList l = findViewById(R.id.torrents_list);
-          if (l != null) l.setActive(false);
-        }
-      }
+				if (tab.getPosition() == 0) {
+					TorrentsList l = findViewById(R.id.torrents_list);
+					if (l != null) l.setActive(false);
+				}
+			}
 
-      @Override
-      public void onTabReselected(TabLayout.Tab tab) {
-      }
-    });
+			@Override
+			public void onTabReselected(TabLayout.Tab tab) {
+			}
+		});
 
-    List<String> perms = Arrays.asList(permission.INTERNET, permission.ACCESS_NETWORK_STATE,
-        permission.ACCESS_WIFI_STATE, permission.READ_EXTERNAL_STORAGE,
-        permission.WRITE_EXTERNAL_STORAGE, permission.WAKE_LOCK);
+		List<String> perms = Arrays.asList(permission.INTERNET, permission.ACCESS_NETWORK_STATE,
+				permission.ACCESS_WIFI_STATE, permission.READ_EXTERNAL_STORAGE,
+				permission.WRITE_EXTERNAL_STORAGE, permission.WAKE_LOCK);
 
-    if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) &&
-        getPrefs().getBoolean(Prefs.K.SHOW_LOCATION_PERM_ALERT)) {
-      // In Android 8+ these permissions are required to get the WiFi SSID.
-      final List<String> l = new ArrayList<>(perms.size() + 2);
-      l.addAll(perms);
-      l.add(permission.ACCESS_COARSE_LOCATION);
-      l.add(permission.ACCESS_FINE_LOCATION);
-      getPrefs().putBoolean(Prefs.K.SHOW_LOCATION_PERM_ALERT, false);
+		if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) &&
+				getPrefs().getBoolean(Prefs.K.SHOW_LOCATION_PERM_ALERT)) {
+			// In Android 8+ these permissions are required to get the WiFi SSID.
+			final List<String> l = new ArrayList<>(perms.size() + 2);
+			l.addAll(perms);
+			l.add(permission.ACCESS_COARSE_LOCATION);
+			l.add(permission.ACCESS_FINE_LOCATION);
+			getPrefs().putBoolean(Prefs.K.SHOW_LOCATION_PERM_ALERT, false);
 
-      AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
-      alertBuilder.setTitle(R.string.location_perm_title);
-      alertBuilder.setMessage(R.string.location_perm_msg);
-      alertBuilder.setPositiveButton(android.R.string.yes, (dialog, which) -> {
-        checkPermission(l.toArray(new String[l.size()]));
-        findViewById(R.id.button_start_stop).requestFocus();
-      });
-      alertBuilder.create().show();
-    } else {
-      checkPermission(perms.toArray(new String[perms.size()]));
-      findViewById(R.id.button_start_stop).requestFocus();
-    }
-  }
+			AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
+			alertBuilder.setTitle(R.string.location_perm_title);
+			alertBuilder.setMessage(R.string.location_perm_msg);
+			alertBuilder.setPositiveButton(android.R.string.yes, (dialog, which) -> {
+				checkPermission(l.toArray(new String[l.size()]));
+				findViewById(R.id.button_start_stop).requestFocus();
+			});
+			alertBuilder.create().show();
+		} else {
+			checkPermission(perms.toArray(new String[perms.size()]));
+			findViewById(R.id.button_start_stop).requestFocus();
+		}
+	}
 
-  @Override
-  protected void onStop() {
-    super.onStop();
-    if (tabLayout.getSelectedTabPosition() == 0) {
-      TorrentsList l = findViewById(R.id.torrents_list);
-      if (l != null) l.setActive(false);
-    }
-  }
+	@Override
+	protected void onStop() {
+		super.onStop();
+		if (tabLayout.getSelectedTabPosition() == 0) {
+			TorrentsList l = findViewById(R.id.torrents_list);
+			if (l != null) l.setActive(false);
+		}
+	}
 
-  @Override
-  protected void onStart() {
-    super.onStart();
-    if (tabLayout.getSelectedTabPosition() == 0) {
-      TorrentsList l = findViewById(R.id.torrents_list);
-      if (l != null) l.setActive(true);
-    }
-  }
+	@Override
+	protected void onStart() {
+		super.onStart();
+		if (tabLayout.getSelectedTabPosition() == 0) {
+			TorrentsList l = findViewById(R.id.torrents_list);
+			if (l != null) l.setActive(true);
+		}
+	}
 
-  @Override
-  public boolean onOptionsItemSelected(final MenuItem item) {
-    switch (item.getItemId()) {
-      case R.id.add_file:
-        addFile();
-        return true;
-      case R.id.add_link:
-        addLink();
-        return true;
-      case R.id.suspend:
-        item.setEnabled(false);
-        bindingHelper.suspend(true, new Runnable() {
-          @Override
-          public void run() {
-            item.setEnabled(true);
-          }
-        });
-        return true;
-      case R.id.resume:
-        item.setEnabled(false);
-        bindingHelper.suspend(false, new Runnable() {
-          @Override
-          public void run() {
-            item.setEnabled(true);
-          }
-        });
-        return true;
-      case R.id.stop:
-      case R.id.start:
-        bindingHelper.startStopService(findViewById(R.id.button_start_stop), findViewById(R.id.button_web_ui));
-        return true;
-    }
+	@Override
+	public boolean onOptionsItemSelected(final MenuItem item) {
+		int itemId = item.getItemId();
 
-    return false;
-  }
+		if (itemId == R.id.add_file) {
+			addFile();
+			return true;
+		} else if (itemId == R.id.add_link) {
+			addLink();
+			return true;
+		} else if (itemId == R.id.suspend) {
+			item.setEnabled(false);
+			bindingHelper.suspend(true, new Runnable() {
+				@Override
+				public void run() {
+					item.setEnabled(true);
+				}
+			});
+			return true;
+		} else if (itemId == R.id.resume) {
+			item.setEnabled(false);
+			bindingHelper.suspend(false, new Runnable() {
+				@Override
+				public void run() {
+					item.setEnabled(true);
+				}
+			});
+			return true;
+		} else if (itemId == R.id.stop || itemId == R.id.start) {
+			bindingHelper.startStopService(findViewById(R.id.button_start_stop), findViewById(R.id.button_web_ui));
+			return true;
+		}
 
-  private void addFile() {
-    Intent intent = new Intent(getApplicationContext(), SelectFileActivity.class);
-    intent.putExtra(SelectFileActivity.REQUEST_FILE, true);
-    intent.putExtra(SelectFileActivity.REQUEST_PATTERN, ".+\\.torrent");
-    setActivityResultHandler((requestCode, resultCode, data) -> {
-      if (resultCode != SelectFileActivity.RESULT_OK) return true;
-      File f = (File) data.getSerializableExtra(SelectFileActivity.RESULT_FILE);
-      Intent intent1 = new Intent(getApplicationContext(), DownloadTorrentActivity.class);
-      intent1.setData(Uri.fromFile(f));
-      startActivity(intent1);
-      return true;
-    });
-    startActivityForResult(intent, ADD_FILE);
-  }
+		return false;
+	}
 
-  private void addLink() {
-    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    final EditText input = new EditText(this);
-    builder.setTitle(R.string.torrent_link);
-    builder.setView(input);
+	private void addFile() {
+		Intent intent = new Intent(getApplicationContext(), SelectFileActivity.class);
+		intent.putExtra(SelectFileActivity.REQUEST_FILE, true);
+		intent.putExtra(SelectFileActivity.REQUEST_PATTERN, ".+\\.torrent");
+		setActivityResultHandler((requestCode, resultCode, data) -> {
+			if (resultCode != SelectFileActivity.RESULT_OK) return true;
+			File f = (File) data.getSerializableExtra(SelectFileActivity.RESULT_FILE);
+			Intent intent1 = new Intent(getApplicationContext(), DownloadTorrentActivity.class);
+			intent1.setData(Uri.fromFile(f));
+			startActivity(intent1);
+			return true;
+		});
+		startActivityForResult(intent, ADD_FILE);
+	}
 
-    builder.setPositiveButton(android.R.string.ok, (dialog, which) -> {
-      String text = input.getText().toString().trim();
+	private void addLink() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		final EditText input = new EditText(this);
+		builder.setTitle(R.string.torrent_link);
+		builder.setView(input);
 
-      if (text.isEmpty()) {
-        Utils.showMsg(input, R.string.msg_enter_link);
-        addLink();
-      } else {
-        Intent intent = new Intent(getApplicationContext(), DownloadTorrentActivity.class);
-        intent.setData(Uri.parse(text));
-        startActivity(intent);
-      }
-    });
-    builder.setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel());
-    builder.show();
-  }
+		builder.setPositiveButton(android.R.string.ok, (dialog, which) -> {
+			String text = input.getText().toString().trim();
 
-  @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    MenuInflater inflater = getMenuInflater();
-    inflater.inflate(R.menu.main_menu, menu);
-    return true;
-  }
+			if (text.isEmpty()) {
+				Utils.showMsg(input, R.string.msg_enter_link);
+				addLink();
+			} else {
+				Intent intent = new Intent(getApplicationContext(), DownloadTorrentActivity.class);
+				intent.setData(Uri.parse(text));
+				startActivity(intent);
+			}
+		});
+		builder.setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel());
+		builder.show();
+	}
 
-  @Override
-  public boolean onMenuOpened(int featureId, Menu menu) {
-    prepareMenu(menu);
-    return true;
-  }
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.main_menu, menu);
+		return true;
+	}
 
-  @Override
-  public boolean onPrepareOptionsMenu(Menu menu) {
-    prepareMenu(menu);
-    return true;
-  }
+	@Override
+	public boolean onMenuOpened(int featureId, Menu menu) {
+		prepareMenu(menu);
+		return true;
+	}
 
-  private void prepareMenu(Menu m) {
-    Menu menu = findMenu(m);
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		prepareMenu(menu);
+		return true;
+	}
 
-    if (menu == null) {
-      Utils.warn(getClass().getName(), "Main menu not found");
-      return;
-    }
+	private void prepareMenu(Menu m) {
+		Menu menu = findMenu(m);
 
-    if (!bindingHelper.isServiceRunning()) {
-      menu.getItem(0).setVisible(false); // Add file
-      menu.getItem(1).setVisible(false); // Add link
-      menu.getItem(2).setVisible(false); // Suspend
-      menu.getItem(3).setVisible(false); // Resume
-      menu.getItem(4).setVisible(false); // Stop
-      menu.getItem(5).setVisible(true); // Start
-      menu.getItem(5).setEnabled(!bindingHelper.isServiceStarting());
-    } else {
-      if (bindingHelper.isSuspended()) {
-        menu.getItem(2).setVisible(false); // Suspend
-        menu.getItem(3).setVisible(true); // Resume
-      } else {
-        menu.getItem(2).setVisible(true); // Suspend
-        menu.getItem(3).setVisible(false); // Resume
-      }
+		if (menu == null) {
+			Utils.warn(getClass().getName(), "Main menu not found");
+			return;
+		}
 
-      menu.getItem(0).setVisible(true); // Add file
-      menu.getItem(1).setVisible(true); // Add link
-      menu.getItem(4).setVisible(true); // Stop
-      menu.getItem(4).setEnabled(!bindingHelper.isServiceStarting());
-      menu.getItem(5).setVisible(false); // Start
-    }
-  }
+		if (!bindingHelper.isServiceRunning()) {
+			menu.getItem(0).setVisible(false); // Add file
+			menu.getItem(1).setVisible(false); // Add link
+			menu.getItem(2).setVisible(false); // Suspend
+			menu.getItem(3).setVisible(false); // Resume
+			menu.getItem(4).setVisible(false); // Stop
+			menu.getItem(5).setVisible(true); // Start
+			menu.getItem(5).setEnabled(!bindingHelper.isServiceStarting());
+		} else {
+			if (bindingHelper.isSuspended()) {
+				menu.getItem(2).setVisible(false); // Suspend
+				menu.getItem(3).setVisible(true); // Resume
+			} else {
+				menu.getItem(2).setVisible(true); // Suspend
+				menu.getItem(3).setVisible(false); // Resume
+			}
 
-  private Menu findMenu(Menu menu) {
-    for (int i = 0, size = menu.size(); i < size; i++) {
-      MenuItem item = menu.getItem(i);
+			menu.getItem(0).setVisible(true); // Add file
+			menu.getItem(1).setVisible(true); // Add link
+			menu.getItem(4).setVisible(true); // Stop
+			menu.getItem(4).setEnabled(!bindingHelper.isServiceStarting());
+			menu.getItem(5).setVisible(false); // Start
+		}
+	}
 
-      if (item.getItemId() == R.id.add_file) {
-        return menu;
-      } else if (item.hasSubMenu()) {
-        Menu m = findMenu(item.getSubMenu());
-        if (m != null) return m;
-      }
-    }
+	private Menu findMenu(Menu menu) {
+		for (int i = 0, size = menu.size(); i < size; i++) {
+			MenuItem item = menu.getItem(i);
 
-    return null;
-  }
+			if (item.getItemId() == R.id.add_file) {
+				return menu;
+			} else if (item.hasSubMenu()) {
+				Menu m = findMenu(item.getSubMenu());
+				if (m != null) return m;
+			}
+		}
 
-  @Override
-  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-    if (requestCode == GRANT_PERM) return;
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-  }
+		return null;
+	}
 
-  private void checkPermission(String... perms) {
-    for (String perm : perms) {
-      if (ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED) {
-        ActivityCompat.requestPermissions(this, perms, GRANT_PERM);
-      }
-    }
-  }
+	@Override
+	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+		if ((requestCode != GRANT_PERM) || !isDebugEnabled()) return;
 
-  static {
-    tabs = new TabInfo[]{
-        new TabInfo(R.string.title_downloads, R.drawable.downloads, R.drawable.downloads_active, R.layout.downloads),
-        new TabInfo(R.string.title_settings, R.drawable.settings, R.drawable.settings_active, R.layout.settings),
-        new TabInfo(R.string.title_watch_dirs, R.drawable.watch, R.drawable.watch_active, R.layout.watch_dirs),
-        new TabInfo(R.string.title_proxy, R.drawable.proxy, R.drawable.proxy_active, R.layout.proxy),
-        // TODO: implement
-        // new TabInfo(R.string.title_rss, R.drawable.rss, R.drawable.rss_active, R.layout.rss),
-        new TabInfo(R.string.title_about, R.drawable.about, R.drawable.about_active, R.layout.about),
-    };
-  }
+		debug(TAG, "Request permissions result:");
+		for (int i = 0; i < permissions.length; i++) {
+			debug(TAG, "%s: %s", permissions[i], grantResults[i]);
+		}
+	}
+
+	private void checkPermission(String... perms) {
+		for (String perm : perms) {
+			if (ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED) {
+				ActivityCompat.requestPermissions(this, perms, GRANT_PERM);
+			}
+		}
+	}
+
+	static {
+		tabs = new TabInfo[]{
+				new TabInfo(R.string.title_downloads, R.drawable.downloads, R.drawable.downloads_active, R.layout.downloads),
+				new TabInfo(R.string.title_settings, R.drawable.settings, R.drawable.settings_active, R.layout.settings),
+				new TabInfo(R.string.title_watch_dirs, R.drawable.watch, R.drawable.watch_active, R.layout.watch_dirs),
+				new TabInfo(R.string.title_proxy, R.drawable.proxy, R.drawable.proxy_active, R.layout.proxy),
+				// TODO: implement
+				// new TabInfo(R.string.title_rss, R.drawable.rss, R.drawable.rss_active, R.layout.rss),
+				new TabInfo(R.string.title_about, R.drawable.about, R.drawable.about_active, R.layout.about),
+		};
+	}
 }
