@@ -11,6 +11,8 @@
 #include <libtransmission/transmission.h>
 #include <libtransmission/utils.h>
 
+extern "C" {
+
 #define LOG_TAG "transmissionbtc"
 #define CLASS_IOEX "java/io/IOException"
 #define CLASS_IAEX "java/lang/IllegalArgumentException"
@@ -21,7 +23,7 @@
 
 #define logErr(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-#define throwEX(env, className, ...) { throw(__FILENAME__, __LINE__, env, className, __VA_ARGS__); goto CATCH; }
+#define throwEX(env, className, ...) { throwException(__FILENAME__, __LINE__, env, className, __VA_ARGS__); goto CATCH; }
 #define throwIOEX(env, ...) throwEX(env, CLASS_IOEX, __VA_ARGS__)
 #define throwOrLog(env, className, throw, ...) \
       if (throw) { throwEX(env, className, __VA_ARGS__); } \
@@ -34,18 +36,18 @@ typedef struct Err {
 } Err;
 #define errCheck(err) if (err->isSet) goto CATCH
 
-jint throw(const char *, int, JNIEnv *, const char *, const char *, ...);
+jint throwException(const char *, int, JNIEnv *, const char *, const char *, ...);
 
 size_t cp(JNIEnv *env, const char *, const char *);
 
 #define ctorFromFileEx(env, jsession, jpath) \
   ctorFromFile(env, jsession, jpath, true); \
-  if ((*env)->ExceptionCheck(env)) goto CATCH
+  if (env->ExceptionCheck()) goto CATCH
 
 tr_ctor *ctorFromFile(JNIEnv *, jlong, jstring, bool);
 
 #define infoFromFileEx(env, jsession, jpath, info) \
-  if ((infoFromFile(env, jsession, jpath, info, true) != TR_PARSE_OK) || (*env)->ExceptionCheck(env)) \
+  if ((infoFromFile(env, jsession, jpath, info, true) != TR_PARSE_OK) || env->ExceptionCheck()) \
     goto CATCH
 
 tr_parse_result infoFromFile(JNIEnv *, jlong, jstring, tr_info *, bool);
@@ -68,10 +70,11 @@ const tr_file *getWantedFileInfo(tr_torrent *tor, uint32_t idx, Err *err);
 
 #define runInTransmissionThreadEx(env, jsession, func, data) \
   runInTransmissionThread(__FILENAME__, __LINE__, env, jsession, func, data);\
-  if ((*env)->ExceptionCheck(env)) goto CATCH
+  if (env->ExceptionCheck()) goto CATCH
 
 void *runInTransmissionThread(const char *file, int line, JNIEnv *env, jlong jsession,
                               void *(*func)(tr_session *session, void *userData, Err *err),
                               void *userData);
 
+} // extern "C"
 #endif //TRANSMISSIONBTC_COMMONS_H

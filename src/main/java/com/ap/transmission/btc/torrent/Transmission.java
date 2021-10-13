@@ -55,627 +55,631 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author Andrey Pavlenko
  */
 public class Transmission {
-  private static final byte STATE_STOPPED = 0;
-  private static final byte STATE_STARTING = -1;
-  private static final byte STATE_STOPPING = -2;
-  private static final String TAG = Transmission.class.getName();
-  private static final String SETTINGS_FILE = "settings.json";
-  private final ReadWriteLock lock = new ReentrantReadWriteLock();
-  private final Prefs prefs;
-  private List<Watcher> watchers;
-  private PowerLock powerLock;
-  private SsdpServer ssdpServer;
-  private volatile List<Long> semaphores;
-  private volatile HttpServer httpServer;
-  private volatile TorrentFs torrentFs;
-  private volatile ExecutorService executor;
-  private volatile ScheduledExecutorService scheduler;
-  private volatile long session = STATE_STOPPED;
-  private volatile byte suspended;
+	private static final byte STATE_STOPPED = 0;
+	private static final byte STATE_STARTING = 1;
+	private static final byte STATE_RUNNING = 2;
+	private static final byte STATE_STOPPING = 4;
+	private static final byte STATE_SUSPENDED = 8;
+	private static final byte STATE_SUSPENDED_BY_USER = 16;
+	private static final String TAG = Transmission.class.getName();
+	private static final String SETTINGS_FILE = "settings.json";
+	private final ReadWriteLock lock = new ReentrantReadWriteLock();
+	private final Prefs prefs;
+	private List<Watcher> watchers;
+	private PowerLock powerLock;
+	private SsdpServer ssdpServer;
+	private volatile List<Long> semaphores;
+	private volatile HttpServer httpServer;
+	private volatile TorrentFs torrentFs;
+	private volatile ExecutorService executor;
+	private volatile ScheduledExecutorService scheduler;
+	private volatile long session;
+	private volatile byte state = STATE_STOPPED;
 
-  public Transmission(Prefs prefs) {
-    this.prefs = prefs;
-  }
+	public Transmission(Prefs prefs) {
+		this.prefs = prefs;
+	}
 
-  public static String getVersion() {
-    return Native.transmissionVersion();
-  }
+	public static String getVersion() {
+		return Native.transmissionVersion();
+	}
 
-  public Prefs getPrefs() {
-    return prefs;
-  }
+	public Prefs getPrefs() {
+		return prefs;
+	}
 
-  public Context getContext() {
-    return getPrefs().getContext();
-  }
+	public Context getContext() {
+		return getPrefs().getContext();
+	}
 
-  public Lock readLock() {
-    return lock.readLock();
-  }
+	public Lock readLock() {
+		return lock.readLock();
+	}
 
-  public Lock writeLock() {
-    return lock.writeLock();
-  }
+	public Lock writeLock() {
+		return lock.writeLock();
+	}
 
-  long getSession() {
-    return session;
-  }
+	long getSession() {
+		return session;
+	}
 
-  public TorrentFs getTorrentFs() {
-    TorrentFs fs = torrentFs;
+	public TorrentFs getTorrentFs() {
+		TorrentFs fs = torrentFs;
 
-    if (fs == null) {
-      throw new IllegalStateException("Transmission is not running");
-    }
+		if (fs == null) {
+			throw new IllegalStateException("Transmission is not running");
+		}
 
-    return fs;
-  }
+		return fs;
+	}
 
-  public HttpServer getHttpServer() throws IllegalStateException, IOException {
-    HttpServer s = httpServer;
+	public HttpServer getHttpServer() throws IllegalStateException, IOException {
+		HttpServer s = httpServer;
 
-    if (s == null) {
-      writeLock().lock();
-      try {
-        if ((s = httpServer) == null) {
-          checkRunning();
-          httpServer = s = new SimpleHttpServer(this);
-          s.start();
-        }
-      } finally {
-        writeLock().unlock();
-      }
-    }
+		if (s == null) {
+			writeLock().lock();
+			try {
+				if ((s = httpServer) == null) {
+					checkRunning();
+					httpServer = s = new SimpleHttpServer(this);
+					s.start();
+				}
+			} finally {
+				writeLock().unlock();
+			}
+		}
 
-    return s;
-  }
+		return s;
+	}
 
-  public void start() throws IOException {
-    if (isRunning()) return;
+	public void start() throws IOException {
+		if (isRunning()) return;
 
-    writeLock().lock();
-    if (isRunning()) return;
-    session = STATE_STARTING;
-    boolean ok = false;
-    getExecutor(); // Start executor
+		writeLock().lock();
+		if (isRunning()) return;
+		state = STATE_STARTING;
+		boolean ok = false;
+		getExecutor(); // Start executor
 
-    try {
-      Context ctx = getContext();
-      boolean suspend = false;
-      File dataDir = new File(ctx.getApplicationInfo().dataDir);
-      File configDir = new File(prefs.getSettingsDir());
-      File downloadDir = new File(prefs.getDownloadDir());
-      File webDir = new File(dataDir, "web");
-      File settings = new File(configDir, SETTINGS_FILE);
-      File tmp = new File(dataDir, "tmp");
-      File indexHtml = new File(dataDir, "web/index.html");
-      File indexOrigHtml = prefs.isAltWebEnabled() ? new File(dataDir, "web/index.webcontrol.html")
-          : new File(dataDir, "web/index.original.html");
-      mkdirs(configDir, downloadDir, tmp);
+		try {
+			Context ctx = getContext();
+			boolean suspend = false;
+			File dataDir = new File(ctx.getApplicationInfo().dataDir);
+			File configDir = new File(prefs.getSettingsDir());
+			File downloadDir = new File(prefs.getDownloadDir());
+			File webDir = new File(dataDir, "web");
+			File settings = new File(configDir, SETTINGS_FILE);
+			File tmp = new File(dataDir, "tmp");
+			File indexHtml = new File(dataDir, "web/index.html");
+			File indexOrigHtml = prefs.isAltWebEnabled() ? new File(dataDir, "web/index.webcontrol.html")
+					: new File(dataDir, "web/index.original.html");
+			mkdirs(configDir, downloadDir, tmp);
 
-      copyAssets(ctx.getAssets(), "web", dataDir, true);
-      if (indexHtml.length() != indexOrigHtml.length()) Utils.transfer(indexOrigHtml, indexHtml);
+			copyAssets(ctx.getAssets(), "web", dataDir, true);
+			if (indexHtml.length() != indexOrigHtml.length()) Utils.transfer(indexOrigHtml, indexHtml);
 
-      if (prefs.isWifiEthOnly()) {
-        suspend = !Utils.isWifiEthActive(ctx, prefs.getWifiSsid());
-        ConnectivityChangeReceiver.register(ctx);
-      }
+			if (prefs.isWifiEthOnly()) {
+				suspend = !Utils.isWifiEthActive(ctx, prefs.getWifiSsid());
+				ConnectivityChangeReceiver.register(ctx);
+			}
 
-      Native.envSet("TMP", tmp.getAbsolutePath());
-      Native.envSet("TRANSMISSION_WEB_HOME", webDir.getAbsolutePath());
-      increaseSoBuf();
-      configureProxy(prefs);
+			Native.envSet("TMP", tmp.getAbsolutePath());
+			Native.envSet("TRANSMISSION_WEB_HOME", webDir.getAbsolutePath());
+			increaseSoBuf();
+			configureProxy(prefs);
 
-      session = Native.transmissionStart(configDir.getAbsolutePath(),
-          downloadDir.getAbsolutePath(), prefs.getEncryptionMode().ordinal(),
-          prefs.isRpcEnabled(), prefs.getRpcPort(),
-          prefs.isRpcAuthEnabled(), prefs.getRpcUsername(), prefs.getRpcPassword(),
-          prefs.isRpcWhitelistEnabled(), prefs.getRpcWhitelist(), settings.exists(),
-          prefs.isSeqDownloadEnabled(), suspend);
-      suspended = (byte) (suspend ? 1 : 0);
-      debug(TAG, "Session created: %d", session);
-      torrentFs = new TorrentFs(this, session);
+			session = Native.transmissionStart(configDir.getAbsolutePath(),
+					downloadDir.getAbsolutePath(), prefs.getEncryptionMode().ordinal(),
+					prefs.isRpcEnabled(), prefs.getRpcPort(),
+					prefs.isRpcAuthEnabled(), prefs.getRpcUsername(), prefs.getRpcPassword(),
+					prefs.isRpcWhitelistEnabled(), prefs.getRpcWhitelist(), settings.exists(),
+					prefs.isSeqDownloadEnabled(), suspend);
+			state = suspend ? (STATE_RUNNING | STATE_SUSPENDED) : STATE_RUNNING;
+			debug(TAG, "Session created: %d", session);
+			torrentFs = new TorrentFs(this, session);
 
-      startWatchers();
-      startUpnp();
-      if (hasDownloadingTorrents()) wakeLock();
+			startWatchers();
+			startUpnp();
+			if (hasDownloadingTorrents()) wakeLock();
 
-      // Handle callbacks in a separate thread to avoid dead locks
-      Native.transmissionSetRpcCallbacks(
-          () -> getExecutor().submit(this::torrentAddedOrChanged),
-          () -> getExecutor().submit(this::torrentRemoved),
-          () -> getExecutor().submit(this::sessionChanged),
-          () -> getExecutor().submit(this::cheduledAltSpeed));
+			// Handle callbacks in a separate thread to avoid dead locks
+			Native.transmissionSetRpcCallbacks(
+					() -> getExecutor().submit(this::torrentAddedOrChanged),
+					() -> getExecutor().submit(this::torrentRemoved),
+					() -> getExecutor().submit(this::sessionChanged),
+					() -> getExecutor().submit(this::cheduledAltSpeed));
 
-      ok = true;
-    } finally {
-      writeLock().unlock();
-      if (!ok) stop();
-    }
-  }
+			ok = true;
+		} finally {
+			writeLock().unlock();
+			if (!ok) stop();
+		}
+	}
 
-  private void startWatchers() {
-    if (prefs.isWatchDirEnabled()) {
-      int interval = prefs.getWatchInterval();
-      watchers = new ArrayList<>();
+	private void startWatchers() {
+		if (prefs.isWatchDirEnabled()) {
+			int interval = prefs.getWatchInterval();
+			watchers = new ArrayList<>();
 
-      for (Map.Entry<String, String> e : prefs.getWatchDirs().entrySet()) {
-        startWatcher(e.getKey(), e.getValue());
-      }
+			for (Map.Entry<String, String> e : prefs.getWatchDirs().entrySet()) {
+				startWatcher(e.getKey(), e.getValue());
+			}
 
-      if (interval > 0) {
+			if (interval > 0) {
 				ScheduledExecutorService sched = getScheduler();
 				sched.scheduleWithFixedDelay(() -> {
 					if (!isRunning() || (watchers == null)) return;
 					for (Watcher w : watchers) w.scan();
 				}, interval, interval, TimeUnit.SECONDS);
 			}
-    }
-  }
-
-  private void startWatcher(String watchDir, String downloadDir) {
-    File wd = new File(watchDir);
-    mkdirs(wd);
-    Watcher w = new Watcher(wd, new File(downloadDir));
-    w.startWatching();
-    watchers.add(w);
-  }
-
-  private void startUpnp() {
-    if (!prefs.isUpnpEnabled()) return;
-    if ((ssdpServer != null) && ssdpServer.isRunning()) return;
-    HttpServer httpServer;
-
-    try {
-      httpServer = getHttpServer();
-    } catch (IOException ex) {
-      err(TAG, ex, "Failed to start HTTP Server");
-      return;
-    }
-
-    try {
-      if (ssdpServer == null) ssdpServer = new SsdpServer(httpServer);
-      ssdpServer.start();
-    } catch (IOException ex) {
-      err(TAG, ex, "Failed to start SSDP server, SSDP NOTIFY will be sent every 60 seconds");
-    }
-  }
-
-  public void stop() {
-    long s = session;
-    if (s <= 0) return;
-
-    writeLock().lock();
-    try {
-      if ((s = session) <= 0) return;
-      session = STATE_STOPPING;
-
-      try {
-        if (semaphores != null) for (Long sem : semaphores) Native.semPost(sem);
-        if (watchers != null) for (Watcher w : watchers) w.stopWatching();
-        ConnectivityChangeReceiver.unregister(getContext());
-        Native.transmissionSetRpcCallbacks(null, null, null, null);
-        Utils.close(httpServer, ssdpServer);
-        stopExecutor();
-        stopSheduler();
-
-        debug(TAG, "Closing session: %d", s);
-        File configDir = new File(prefs.getSettingsDir());
-        mkdirs(configDir);
-        Native.transmissionStop(s, configDir.getAbsolutePath());
-      } finally {
-        session = STATE_STOPPED;
-        torrentFs = null;
-        httpServer = null;
-        ssdpServer = null;
-        watchers = null;
-        executor = null;
-        scheduler = null;
-        semaphores = null;
-        suspended = 0;
-        wakeUnlock();
-      }
-    } finally {
-      writeLock().unlock();
-    }
-  }
-
-  public boolean isRunning() {
-    return session > 0;
-  }
-
-  @SuppressWarnings("unused")
-  public boolean isStarting() {
-    return session == STATE_STARTING;
-  }
-
-  @SuppressWarnings("unused")
-  public boolean isStopping() {
-    return session == STATE_STOPPING;
-  }
-
-  public boolean isStopped() {
-    return session == STATE_STOPPED;
-  }
-
-  @SuppressLint("StaticFieldLeak")
-  public void suspend(final boolean suspend, final boolean byUser, final Runnable callback) {
-    checkRunning();
-    new AsyncTask<Void, Integer, Void>() {
-
-      @Override
-      protected Void doInBackground(Void... voids) {
-        writeLock().lock();
-        try {
-          if (!isRunning()) return null;
-          debug(TAG, "Suspending: %s, by user: %s", suspend, byUser);
-
-          if (suspend) {
-            Utils.close(ssdpServer);
-            ssdpServer = null;
-          } else {
-            startUpnp();
-          }
-
-          Native.transmissionSuspend(session, suspend);
-          suspended = (byte) (!suspend ? 0 : byUser ? 2 : 1);
-        } finally {
-          writeLock().unlock();
-        }
-
-        return null;
-      }
-
-      @Override
-      protected void onPostExecute(Void aVoid) {
-        TransmissionService.updateNotification();
-        if (callback != null) callback.run();
-      }
-    }.
-
-        execute();
-  }
-
-  public boolean isSuspended() {
-    return suspended != 0;
-  }
-
-  public boolean isSuspendedByUser() {
-    return suspended == 2;
-  }
-
-  public boolean hasDownloadingTorrents() {
-    readLock().lock();
-    try {
-      return isRunning() && Native.transmissionHasDownloadingTorrents(session);
-    } finally {
-      readLock().unlock();
-    }
-  }
-
-  public AddTorrentResult addTorrent(File torrentFile, File downloadDir,
-                                     @Nullable int[] unwantedIndexes,
-                                     @Nullable byte[] returnMeTorrentHash,
-                                     boolean delete, boolean sequential,
-                                     int retries, int delay) throws InterruptedException {
-    if (!isRunning()) return NOT_STARTED;
-    String path = torrentFile.getAbsolutePath();
-    String downloadPath = downloadDir.getAbsolutePath();
-    info(TAG, "Adding new torrent file: %s", path);
-    mkdirs(downloadDir);
-
-    for (int i = 0; i < retries + 1; i++) {
-      int result;
-
-      readLock().lock();
-      try {
-        if (!isRunning()) {
-          info(TAG, "Transmission is not running - ignoring: %s", path);
-          return NOT_STARTED;
-        }
-
-        result = Native.torrentAdd(session, path, downloadPath, delete, sequential,
-            unwantedIndexes, returnMeTorrentHash);
-      } finally {
-        readLock().unlock();
-      }
-
-      switch (result) {
-        case 2:
-          info(TAG, "Duplicate torrent - ignoring: %s", torrentFile);
-          torrentAddedOrChanged();
-          return DUPLICATE;
-        case 0:
-          torrentAddedOrChanged();
-          return OK;
-        case 3:
-          torrentAddedOrChanged();
-          return OK_DELETE;
-        case 1:
-          Thread.sleep(delay);
-      }
-    }
-
-    err(TAG, "Failed to parse torrent file: %s", torrentFile);
-    return PARSE_ERR;
-  }
-
-  private void torrentAddedOrChanged() {
-    debug(TAG, "torrentAddedOrChanged()");
-    TorrentFs fs = torrentFs;
-    if (fs != null) fs.reset();
-    wakeLock();
-  }
-
-  private void torrentRemoved() {
-    debug(TAG, "torrentAddedOrChanged()");
-    TorrentFs fs = torrentFs;
-    if (fs != null) fs.reset();
-  }
-
-  private void sessionChanged() {
-    debug(TAG, "torrentAddedOrChanged()");
-    readLock().lock();
-    try {
-      if (!isRunning()) return;
-      int encrMode = Native.transmissionGetEncryptionMode(session);
-
-      if (encrMode != prefs.getEncryptionMode().ordinal()) {
-        prefs.setEncryptionMode(EncrMode.get(encrMode));
-      }
-    } finally {
-      readLock().unlock();
-    }
-  }
-
-  private void cheduledAltSpeed() {
-    debug(TAG, "Alt speed changed by timer");
-    wakeLock();
-  }
-
-  public Promise<Void> magnetToTorrent(final Uri magnetLink, final File destTorrentPath,
-                                       final int timeout, final boolean[] enqueue) {
-    return new Promise<Void>() {
-      private final long sem = Native.semCreate();
-
-      {
-        List<Long> semaphores = Transmission.this.semaphores;
-
-        if (semaphores == null) {
-          writeLock().lock();
-          try {
-            if ((semaphores = Transmission.this.semaphores) == null) {
-              Transmission.this.semaphores = semaphores = new Vector<>();
-            }
-          } finally {
-            writeLock().unlock();
-          }
-        }
-
-        semaphores.add(sem);
-      }
-
-      @Override
-      public Void get() throws Throwable {
-        readLock().lock();
-        try {
-          checkRunning();
-          TorrentFs fs = torrentFs;
-          if (fs != null) fs.reset();
-          Native.torrentMagnetToTorrentFile(session, sem, magnetLink.toString(),
-              destTorrentPath.getAbsolutePath(), timeout, enqueue);
-          return null;
-        } finally {
-          readLock().unlock();
-        }
-      }
-
-      @Override
-      public synchronized void cancel() {
-        Native.semPost(sem);
-        List<Long> semaphores = Transmission.this.semaphores;
-        if (semaphores != null) semaphores.remove(sem);
-      }
-
-      @Override
-      protected void finalize() {
-        List<Long> semaphores = Transmission.this.semaphores;
-        if (semaphores != null) semaphores.remove(sem);
-        Native.semDestroy(sem);
-      }
-    };
-  }
-
-  private void increaseSoBuf() {
-    if (!prefs.isIncreaseSoBuf()) return;
-    String file = "scripts/set_so_buf.sh";
-    debug(TAG, "Executing su -c %s", file);
-    AssetManager amgr = getContext().getAssets();
-    InputStream in = null;
-
-    try {
-      in = amgr.open(file, AssetManager.ACCESS_STREAMING);
-      int status = Utils.su(3000, in);
-      if (status != 0) err(TAG, "su -c %s failed with exit code %d", file, status);
-    } catch (IOException ex) {
-      err(TAG, ex, "Failed to open asset: %s", file);
-    } finally {
-      if (in != null) try {
-        in.close();
-      } catch (IOException ignore) {
-      }
-    }
-  }
-
-  public ExecutorService getExecutor() {
-    ExecutorService exec = executor;
-
-    if (exec == null) {
-      writeLock().lock();
-      try {
-        if ((exec = executor) == null) {
-          executor = exec = new ThreadPoolExecutor(0,
-              30, 60L, TimeUnit.SECONDS, new SynchronousQueue<>(),
-              Executors.defaultThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
-        }
-      } finally {
-        writeLock().unlock();
-      }
-    }
-
-    return exec;
-  }
-
-  private void stopExecutor() {
-    ExecutorService exec = executor;
-    if (exec == null) return;
-    executor = null;
-
-    try {
-      exec.shutdownNow();
-      exec.awaitTermination(30, TimeUnit.SECONDS);
-    } catch (InterruptedException ignore) {
-    }
-  }
-
-  public ScheduledExecutorService getScheduler() {
-    ScheduledExecutorService sched = scheduler;
-
-    if (sched == null) {
-      writeLock().lock();
-      try {
-        if ((sched = scheduler) == null) {
-          checkRunning();
-          scheduler = sched = Executors.newScheduledThreadPool(1);
-        }
-      } finally {
-        writeLock().unlock();
-      }
-    }
-
-    return sched;
-  }
-
-  private void stopSheduler() {
-    ScheduledExecutorService sched = scheduler;
-    if (sched == null) return;
-    scheduler = null;
-
-    try {
-      sched.shutdownNow();
-      sched.awaitTermination(30, TimeUnit.SECONDS);
-    } catch (InterruptedException ignore) {
-    }
-  }
-
-  @SuppressLint("WakelockTimeout")
-  private void wakeLock() {
-    writeLock().lock();
-    try {
-      if (powerLock != null || !isRunning()) return;
-      PowerLock pl = PowerLock.newLock(getContext());
-      if (pl == null) return;
-      pl.acquire();
-      powerLock = pl;
-      debug(TAG, "WakeLock acquired");
-
-      final ScheduledFuture<?>[] f = new ScheduledFuture[1];
-      f[0] = getScheduler().scheduleWithFixedDelay(() -> {
-        if (!hasDownloadingTorrents()) {
-          writeLock().lock();
-          try {
-            if (!isRunning()) {
-              wakeUnlock();
-              f[0].cancel(false);
-            } else if (!Native.transmissionHasDownloadingTorrents(session)) {
-              debug(TAG, "No active downloads - releasing WakeLock");
-              wakeUnlock();
-              f[0].cancel(false);
-            }
-          } finally {
-            writeLock().unlock();
-          }
-        }
-      }, 1, 1, TimeUnit.MINUTES);
-    } finally {
-      writeLock().unlock();
-    }
-  }
-
-  private void wakeUnlock() {
-    writeLock().lock();
-    try {
-      if (powerLock == null) return;
-      powerLock.release();
-      powerLock = null;
-      debug(TAG, "WakeLock released");
-    } finally {
-      writeLock().unlock();
-    }
-  }
-
-  private final class Watcher extends FileObserver {
-    private final File dir;
-    private final File downloadDir;
-
-    private Watcher(File dir, File downloadDir) {
-      super(dir.getAbsolutePath(), FileObserver.CREATE);
-      this.dir = dir;
-      this.downloadDir = downloadDir;
-    }
-
-    @Override
-    public void startWatching() {
-      info(TAG, "Start watching directory: %s", dir);
-      mkdirs(dir);
-      scan();
-      super.startWatching();
-    }
-
-    void scan() {
-      String[] files = dir.list();
-      if (files != null) for (String f : files) add(f);
-    }
-
-    @Override
-    public void onEvent(int event, @Nullable String path) {
-      add(path);
-    }
-
-    private void add(String path) {
-      if ((path == null) || !path.endsWith(".torrent")) return;
-      File f = new File(dir, path);
-      AddTorrentResult result;
-
-      try {
-        result = addTorrent(f, downloadDir, null, null,
-            false, prefs.isSeqDownloadEnabled(), 10, 1000);
-      } catch (InterruptedException ex) {
-        err(TAG, ex, "Failed to add torrent file: %s", f);
-        return;
-      }
-
-      if (result == OK) {
-        File renameTo = new File(dir, path + ".added");
-        if (!f.renameTo(renameTo) &&
-            !StorageAccess.renamePath(f.getAbsolutePath(), renameTo.getAbsolutePath())) {
-          err(TAG, "Failed to rename file to: %s", renameTo);
-        }
-      } else if (result != NOT_STARTED) {
-        if (!f.delete() && !StorageAccess.removePath(f.getAbsolutePath())) {
-          err(TAG, "Failed to delete file: %s", f);
-        }
-      }
-    }
-  }
-
-  void checkRunning() {
-    if (!isRunning()) {
-      throw new IllegalStateException("Transmission is not running");
-    }
-  }
-
-  public enum AddTorrentResult {
-    OK, PARSE_ERR, DUPLICATE, OK_DELETE, NOT_STARTED
-  }
+		}
+	}
+
+	private void startWatcher(String watchDir, String downloadDir) {
+		File wd = new File(watchDir);
+		mkdirs(wd);
+		Watcher w = new Watcher(wd, new File(downloadDir));
+		w.startWatching();
+		watchers.add(w);
+	}
+
+	private void startUpnp() {
+		if (!prefs.isUpnpEnabled()) return;
+		if ((ssdpServer != null) && ssdpServer.isRunning()) return;
+		HttpServer httpServer;
+
+		try {
+			httpServer = getHttpServer();
+		} catch (IOException ex) {
+			err(TAG, ex, "Failed to start HTTP Server");
+			return;
+		}
+
+		try {
+			if (ssdpServer == null) ssdpServer = new SsdpServer(httpServer);
+			ssdpServer.start();
+		} catch (IOException ex) {
+			err(TAG, ex, "Failed to start SSDP server, SSDP NOTIFY will be sent every 60 seconds");
+		}
+	}
+
+	public void stop() {
+		long s = session;
+		if (s == 0) return;
+
+		writeLock().lock();
+		try {
+			if ((s = session) == 0) return;
+			state = STATE_STOPPING;
+
+			try {
+				if (semaphores != null) for (Long sem : semaphores) Native.semPost(sem);
+				if (watchers != null) for (Watcher w : watchers) w.stopWatching();
+				ConnectivityChangeReceiver.unregister(getContext());
+				Native.transmissionSetRpcCallbacks(null, null, null, null);
+				Utils.close(httpServer, ssdpServer);
+				stopExecutor();
+				stopSheduler();
+
+				debug(TAG, "Closing session: %d", s);
+				File configDir = new File(prefs.getSettingsDir());
+				mkdirs(configDir);
+				Native.transmissionStop(s, configDir.getAbsolutePath());
+			} finally {
+				session = 0;
+				state = STATE_STOPPED;
+				torrentFs = null;
+				httpServer = null;
+				ssdpServer = null;
+				watchers = null;
+				executor = null;
+				scheduler = null;
+				semaphores = null;
+				wakeUnlock();
+			}
+		} finally {
+			writeLock().unlock();
+		}
+	}
+
+	public boolean isRunning() {
+		return (state & STATE_RUNNING) != 0;
+	}
+
+	@SuppressWarnings("unused")
+	public boolean isStarting() {
+		return (state & STATE_STARTING) != 0;
+	}
+
+	@SuppressWarnings("unused")
+	public boolean isStopping() {
+		return (state & STATE_STOPPING) != 0;
+	}
+
+	public boolean isStopped() {
+		return state == STATE_STOPPED;
+	}
+
+	@SuppressLint("StaticFieldLeak")
+	public void suspend(final boolean suspend, final boolean byUser, final Runnable callback) {
+		checkRunning();
+		new AsyncTask<Void, Integer, Void>() {
+
+			@Override
+			protected Void doInBackground(Void... voids) {
+				writeLock().lock();
+				try {
+					if (!isRunning()) return null;
+					debug(TAG, "Suspending: %s, by user: %s", suspend, byUser);
+
+					if (suspend) {
+						Utils.close(ssdpServer);
+						ssdpServer = null;
+					} else {
+						startUpnp();
+					}
+
+					Native.transmissionSuspend(session, suspend);
+					state &= ~(STATE_SUSPENDED | STATE_SUSPENDED_BY_USER);
+					if (suspend) state |= byUser ? STATE_SUSPENDED_BY_USER : STATE_SUSPENDED;
+				} finally {
+					writeLock().unlock();
+				}
+
+				return null;
+			}
+
+			@Override
+			protected void onPostExecute(Void aVoid) {
+				TransmissionService.updateNotification();
+				if (callback != null) callback.run();
+			}
+		}.
+
+				execute();
+	}
+
+	public boolean isSuspended() {
+		return (state & (STATE_SUSPENDED | STATE_SUSPENDED_BY_USER)) != 0;
+	}
+
+	public boolean isSuspendedByUser() {
+		return (state & STATE_SUSPENDED_BY_USER) != 0;
+	}
+
+	public boolean hasDownloadingTorrents() {
+		readLock().lock();
+		try {
+			return isRunning() && Native.transmissionHasDownloadingTorrents(session);
+		} finally {
+			readLock().unlock();
+		}
+	}
+
+	public AddTorrentResult addTorrent(File torrentFile, File downloadDir,
+																		 @Nullable int[] unwantedIndexes,
+																		 @Nullable byte[] returnMeTorrentHash,
+																		 boolean delete, boolean sequential,
+																		 int retries, int delay) throws InterruptedException {
+		if (!isRunning()) return NOT_STARTED;
+		String path = torrentFile.getAbsolutePath();
+		String downloadPath = downloadDir.getAbsolutePath();
+		info(TAG, "Adding new torrent file: %s", path);
+		mkdirs(downloadDir);
+
+		for (int i = 0; i < retries + 1; i++) {
+			int result;
+
+			readLock().lock();
+			try {
+				if (!isRunning()) {
+					info(TAG, "Transmission is not running - ignoring: %s", path);
+					return NOT_STARTED;
+				}
+
+				result = Native.torrentAdd(session, path, downloadPath, delete, sequential,
+						unwantedIndexes, returnMeTorrentHash);
+			} finally {
+				readLock().unlock();
+			}
+
+			switch (result) {
+				case 2:
+					info(TAG, "Duplicate torrent - ignoring: %s", torrentFile);
+					torrentAddedOrChanged();
+					return DUPLICATE;
+				case 0:
+					torrentAddedOrChanged();
+					return OK;
+				case 3:
+					torrentAddedOrChanged();
+					return OK_DELETE;
+				case 1:
+					Thread.sleep(delay);
+			}
+		}
+
+		err(TAG, "Failed to parse torrent file: %s", torrentFile);
+		return PARSE_ERR;
+	}
+
+	private void torrentAddedOrChanged() {
+		debug(TAG, "torrentAddedOrChanged()");
+		TorrentFs fs = torrentFs;
+		if (fs != null) fs.reset();
+		wakeLock();
+	}
+
+	private void torrentRemoved() {
+		debug(TAG, "torrentAddedOrChanged()");
+		TorrentFs fs = torrentFs;
+		if (fs != null) fs.reset();
+	}
+
+	private void sessionChanged() {
+		debug(TAG, "torrentAddedOrChanged()");
+		readLock().lock();
+		try {
+			if (!isRunning()) return;
+			int encrMode = Native.transmissionGetEncryptionMode(session);
+
+			if (encrMode != prefs.getEncryptionMode().ordinal()) {
+				prefs.setEncryptionMode(EncrMode.get(encrMode));
+			}
+		} finally {
+			readLock().unlock();
+		}
+	}
+
+	private void cheduledAltSpeed() {
+		debug(TAG, "Alt speed changed by timer");
+		wakeLock();
+	}
+
+	public Promise<Void> magnetToTorrent(final Uri magnetLink, final File destTorrentPath,
+																			 final int timeout, final boolean[] enqueue) {
+		return new Promise<Void>() {
+			private final long sem = Native.semCreate();
+
+			{
+				List<Long> semaphores = Transmission.this.semaphores;
+
+				if (semaphores == null) {
+					writeLock().lock();
+					try {
+						if ((semaphores = Transmission.this.semaphores) == null) {
+							Transmission.this.semaphores = semaphores = new Vector<>();
+						}
+					} finally {
+						writeLock().unlock();
+					}
+				}
+
+				semaphores.add(sem);
+			}
+
+			@Override
+			public Void get() throws Throwable {
+				readLock().lock();
+				try {
+					checkRunning();
+					TorrentFs fs = torrentFs;
+					if (fs != null) fs.reset();
+					Native.torrentMagnetToTorrentFile(session, sem, magnetLink.toString(),
+							destTorrentPath.getAbsolutePath(), timeout, enqueue);
+					return null;
+				} finally {
+					readLock().unlock();
+				}
+			}
+
+			@Override
+			public synchronized void cancel() {
+				Native.semPost(sem);
+				List<Long> semaphores = Transmission.this.semaphores;
+				if (semaphores != null) semaphores.remove(sem);
+			}
+
+			@Override
+			protected void finalize() {
+				List<Long> semaphores = Transmission.this.semaphores;
+				if (semaphores != null) semaphores.remove(sem);
+				Native.semDestroy(sem);
+			}
+		};
+	}
+
+	private void increaseSoBuf() {
+		if (!prefs.isIncreaseSoBuf()) return;
+		String file = "scripts/set_so_buf.sh";
+		debug(TAG, "Executing su -c %s", file);
+		AssetManager amgr = getContext().getAssets();
+		InputStream in = null;
+
+		try {
+			in = amgr.open(file, AssetManager.ACCESS_STREAMING);
+			int status = Utils.su(3000, in);
+			if (status != 0) err(TAG, "su -c %s failed with exit code %d", file, status);
+		} catch (IOException ex) {
+			err(TAG, ex, "Failed to open asset: %s", file);
+		} finally {
+			if (in != null) try {
+				in.close();
+			} catch (IOException ignore) {
+			}
+		}
+	}
+
+	public ExecutorService getExecutor() {
+		ExecutorService exec = executor;
+
+		if (exec == null) {
+			writeLock().lock();
+			try {
+				if ((exec = executor) == null) {
+					executor = exec = new ThreadPoolExecutor(0,
+							30, 60L, TimeUnit.SECONDS, new SynchronousQueue<>(),
+							Executors.defaultThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
+				}
+			} finally {
+				writeLock().unlock();
+			}
+		}
+
+		return exec;
+	}
+
+	private void stopExecutor() {
+		ExecutorService exec = executor;
+		if (exec == null) return;
+		executor = null;
+
+		try {
+			exec.shutdownNow();
+			exec.awaitTermination(30, TimeUnit.SECONDS);
+		} catch (InterruptedException ignore) {
+		}
+	}
+
+	public ScheduledExecutorService getScheduler() {
+		ScheduledExecutorService sched = scheduler;
+
+		if (sched == null) {
+			writeLock().lock();
+			try {
+				if ((sched = scheduler) == null) {
+					checkRunning();
+					scheduler = sched = Executors.newScheduledThreadPool(1);
+				}
+			} finally {
+				writeLock().unlock();
+			}
+		}
+
+		return sched;
+	}
+
+	private void stopSheduler() {
+		ScheduledExecutorService sched = scheduler;
+		if (sched == null) return;
+		scheduler = null;
+
+		try {
+			sched.shutdownNow();
+			sched.awaitTermination(30, TimeUnit.SECONDS);
+		} catch (InterruptedException ignore) {
+		}
+	}
+
+	@SuppressLint("WakelockTimeout")
+	private void wakeLock() {
+		writeLock().lock();
+		try {
+			if (powerLock != null || !isRunning()) return;
+			PowerLock pl = PowerLock.newLock(getContext());
+			if (pl == null) return;
+			pl.acquire();
+			powerLock = pl;
+			debug(TAG, "WakeLock acquired");
+
+			final ScheduledFuture<?>[] f = new ScheduledFuture[1];
+			f[0] = getScheduler().scheduleWithFixedDelay(() -> {
+				if (!hasDownloadingTorrents()) {
+					writeLock().lock();
+					try {
+						if (!isRunning()) {
+							wakeUnlock();
+							f[0].cancel(false);
+						} else if (!Native.transmissionHasDownloadingTorrents(session)) {
+							debug(TAG, "No active downloads - releasing WakeLock");
+							wakeUnlock();
+							f[0].cancel(false);
+						}
+					} finally {
+						writeLock().unlock();
+					}
+				}
+			}, 1, 1, TimeUnit.MINUTES);
+		} finally {
+			writeLock().unlock();
+		}
+	}
+
+	private void wakeUnlock() {
+		writeLock().lock();
+		try {
+			if (powerLock == null) return;
+			powerLock.release();
+			powerLock = null;
+			debug(TAG, "WakeLock released");
+		} finally {
+			writeLock().unlock();
+		}
+	}
+
+	private final class Watcher extends FileObserver {
+		private final File dir;
+		private final File downloadDir;
+
+		private Watcher(File dir, File downloadDir) {
+			super(dir.getAbsolutePath(), FileObserver.CREATE);
+			this.dir = dir;
+			this.downloadDir = downloadDir;
+		}
+
+		@Override
+		public void startWatching() {
+			info(TAG, "Start watching directory: %s", dir);
+			mkdirs(dir);
+			scan();
+			super.startWatching();
+		}
+
+		void scan() {
+			String[] files = dir.list();
+			if (files != null) for (String f : files) add(f);
+		}
+
+		@Override
+		public void onEvent(int event, @Nullable String path) {
+			add(path);
+		}
+
+		private void add(String path) {
+			if ((path == null) || !path.endsWith(".torrent")) return;
+			File f = new File(dir, path);
+			AddTorrentResult result;
+
+			try {
+				result = addTorrent(f, downloadDir, null, null,
+						false, prefs.isSeqDownloadEnabled(), 10, 1000);
+			} catch (InterruptedException ex) {
+				err(TAG, ex, "Failed to add torrent file: %s", f);
+				return;
+			}
+
+			if (result == OK) {
+				File renameTo = new File(dir, path + ".added");
+				if (!f.renameTo(renameTo) &&
+						!StorageAccess.renamePath(f.getAbsolutePath(), renameTo.getAbsolutePath())) {
+					err(TAG, "Failed to rename file to: %s", renameTo);
+				}
+			} else if (result != NOT_STARTED) {
+				if (!f.delete() && !StorageAccess.removePath(f.getAbsolutePath())) {
+					err(TAG, "Failed to delete file: %s", f);
+				}
+			}
+		}
+	}
+
+	void checkRunning() {
+		if (!isRunning()) {
+			throw new IllegalStateException("Transmission is not running");
+		}
+	}
+
+	public enum AddTorrentResult {
+		OK, PARSE_ERR, DUPLICATE, OK_DELETE, NOT_STARTED
+	}
 }

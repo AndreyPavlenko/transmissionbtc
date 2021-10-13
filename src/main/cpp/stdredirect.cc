@@ -11,6 +11,8 @@ Java_com_ap_transmission_btc_Native_stdRedirect(JNIEnv *__unused env, jclass __u
 #include <pthread.h>
 #include <android/log.h>
 
+extern "C" {
+
 static int pfd[2];
 static pthread_t thr;
 
@@ -43,4 +45,5 @@ Java_com_ap_transmission_btc_Native_stdRedirect(JNIEnv *env, jclass __unused c) 
   CATCH:;
 }
 
+} // extern "C"
 #endif

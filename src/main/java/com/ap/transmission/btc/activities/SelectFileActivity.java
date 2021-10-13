@@ -12,6 +12,7 @@ import static com.ap.transmission.btc.Utils.hasWritePerms;
 import static com.ap.transmission.btc.Utils.showErr;
 import static com.ap.transmission.btc.Utils.showMsg;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ListActivity;
@@ -112,7 +113,9 @@ public class SelectFileActivity extends ListActivity {
       }
     }
 
-    if ((SDK_INT >= VERSION_CODES.R) && !Environment.isExternalStorageManager()) {
+    if ((SDK_INT >= VERSION_CODES.R)
+        && Utils.hasManifestPermission(this, Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+        && !Environment.isExternalStorageManager()) {
       Intent req = new Intent(ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
       Uri uri = Uri.fromParts("package", getPackageName(), null);
       req.setData(uri);

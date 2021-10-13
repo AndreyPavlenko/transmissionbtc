@@ -1,5 +1,12 @@
 package com.ap.transmission.btc;
 
+import static android.content.Context.CONNECTIVITY_SERVICE;
+import static android.content.Context.WIFI_SERVICE;
+import static android.net.ConnectivityManager.TYPE_ETHERNET;
+import static android.net.ConnectivityManager.TYPE_WIFI;
+import static com.ap.transmission.btc.BuildConfig.BUILD_TYPE;
+import static java.net.NetworkInterface.getNetworkInterfaces;
+
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -7,6 +14,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
@@ -75,13 +83,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
-import static android.content.Context.CONNECTIVITY_SERVICE;
-import static android.content.Context.WIFI_SERVICE;
-import static android.net.ConnectivityManager.TYPE_ETHERNET;
-import static android.net.ConnectivityManager.TYPE_WIFI;
-import static com.ap.transmission.btc.BuildConfig.BUILD_TYPE;
-import static java.net.NetworkInterface.getNetworkInterfaces;
 
 /**
  * @author Andrey Pavlenko
@@ -845,5 +846,16 @@ public class Utils {
     intent.setDataAndType(uri, mime);
     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
     a.startActivity(Intent.createChooser(intent, a.getResources().getString(R.string.open_with)));
+  }
+
+  public static boolean hasManifestPermission(Context ctx, String perm) {
+    try {
+      String[] perms = ctx.getPackageManager().
+          getPackageInfo(ctx.getPackageName(), PackageManager.GET_PERMISSIONS)
+          .requestedPermissions;
+      return Arrays.asList(perms).contains(perm);
+    } catch (PackageManager.NameNotFoundException ignore) {
+      return false;
+    }
   }
 }

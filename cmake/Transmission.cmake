@@ -11,6 +11,7 @@ set(TR_CMAKE_ARGS -DENABLE_TESTS=OFF -DENABLE_DAEMON=OFF -DINSTALL_DOC=OFF -DENA
 set(TR_LIBRARIES
         "${TR_BUILD_DIR}/libtransmission/libtransmission.a"
         "${TR_BUILD_DIR}/third-party/dht/lib/libdht.a"
+        "${TR_BUILD_DIR}/third-party/arc4/src/libarc4.a"
         "${TR_BUILD_DIR}/third-party/b64/lib/libb64.a"
         "${TR_BUILD_DIR}/third-party/natpmp/lib/libnatpmp.a"
         "${TR_BUILD_DIR}/third-party/miniupnpc/lib/libminiupnpc.a"

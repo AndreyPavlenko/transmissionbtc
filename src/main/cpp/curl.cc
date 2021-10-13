@@ -5,12 +5,14 @@
 #include <curl/curl.h>
 #include <libtransmission/version.h>
 
+extern "C" {
 JNIEXPORT void JNICALL
 Java_com_ap_transmission_btc_Native_curl(JNIEnv *env, jclass __unused c,
                                          jstring jurl, jstring jdst, jint timeout) {
-  const char *dst = (*env)->GetStringUTFChars(env, jdst, 0);
+  const char *dst = env->GetStringUTFChars(jdst, 0);
   FILE *file = fopen(dst, "wb");
 
+{
   if (file == NULL) {
     throwEX(env, CLASS_IOEX, "Failed to open file %s: %s", dst, strerror(errno));
   }
@@ -19,7 +21,7 @@ Java_com_ap_transmission_btc_Native_curl(JNIEnv *env, jclass __unused c,
 
   if (curl) {
     char err[CURL_ERROR_SIZE];
-    const char *url = (*env)->GetStringUTFChars(env, jurl, 0);
+    const char *url = env->GetStringUTFChars(jurl, 0);
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, err);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL);
@@ -36,7 +38,7 @@ Java_com_ap_transmission_btc_Native_curl(JNIEnv *env, jclass __unused c,
 #endif
 
     CURLcode res = curl_easy_perform(curl);
-    (*env)->ReleaseStringUTFChars(env, jurl, url);
+    env->ReleaseStringUTFChars(jurl, url);
     curl_easy_cleanup(curl);
 
     if (res != CURLE_OK) {
@@ -46,7 +48,8 @@ Java_com_ap_transmission_btc_Native_curl(JNIEnv *env, jclass __unused c,
     throwEX(env, CLASS_IOEX, "Failed to initialize curl");
   }
 
-  CATCH:
-  (*env)->ReleaseStringUTFChars(env, jdst, dst);
+}  CATCH:
+  env->ReleaseStringUTFChars(jdst, dst);
   if (file != NULL) fclose(file);
 }
+} //extern "C"

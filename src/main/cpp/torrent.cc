@@ -2,6 +2,7 @@
 #include "transmission-private.h"
 #include <semaphore.h>
 
+extern "C" {
 // ----------------------------------- torrentAdd --------------------------------------------------
 /*
  * Returns:
@@ -15,26 +16,26 @@ Java_com_ap_transmission_btc_Native_torrentAdd(
     JNIEnv *env, jclass __unused c, jlong jsession, jstring jpath, jstring jdownloadDir,
     jboolean setDelete, jboolean sequential, jintArray unwantedIndexes,
     jbyteArray returnMeTorrentHash) {
-  bool delete = false;
+  bool del = false;
   tr_ctor *ctor = ctorFromFile(env, jsession, jpath, false);
 
   if (ctor != NULL) {
     if (jdownloadDir != NULL) {
-      const char *downloadDir = (*env)->GetStringUTFChars(env, jdownloadDir, 0);
+      const char *downloadDir = env->GetStringUTFChars(jdownloadDir, 0);
       tr_ctorSetDownloadDir(ctor, TR_FORCE, downloadDir);
-      (*env)->ReleaseStringUTFChars(env, jdownloadDir, downloadDir);
+      env->ReleaseStringUTFChars(jdownloadDir, downloadDir);
     }
 
     if (unwantedIndexes != NULL) {
-      jsize len = (*env)->GetArrayLength(env, unwantedIndexes);
-      jint *unwanted = (*env)->GetIntArrayElements(env, unwantedIndexes, 0);
+      jsize len = env->GetArrayLength(unwantedIndexes);
+      jint *unwanted = env->GetIntArrayElements(unwantedIndexes, 0);
       tr_file_index_t trIndexes[len];
 
       for (int i = 0; i < len; i++) {
         trIndexes[i] = (tr_file_index_t) unwanted[i];
       }
 
-      (*env)->ReleaseIntArrayElements(env, unwantedIndexes, unwanted, 0);
+      env->ReleaseIntArrayElements(unwantedIndexes, unwanted, 0);
       tr_ctorSetFilesWanted(ctor, trIndexes, (tr_file_index_t) len, false);
     }
 
@@ -54,8 +55,8 @@ Java_com_ap_transmission_btc_Native_torrentAdd(
           const tr_info *info = tr_torrentInfo(tor);
           tr_file_index_t wanted[info->fileCount];
           tr_file_index_t wantedCount = 0;
-          jsize len = (*env)->GetArrayLength(env, unwantedIndexes);
-          jint *unwanted = (*env)->GetIntArrayElements(env, unwantedIndexes, 0);
+          jsize len = env->GetArrayLength(unwantedIndexes);
+          jint *unwanted = env->GetIntArrayElements(unwantedIndexes, 0);
 
           for (int i = 0; i < info->fileCount; i++) {
             tr_file f = info->files[i];
@@ -72,23 +73,23 @@ Java_com_ap_transmission_btc_Native_torrentAdd(
             if (w) wanted[wantedCount++] = (tr_file_index_t) i;
           }
 
-          (*env)->ReleaseIntArrayElements(env, unwantedIndexes, unwanted, 0);
+          env->ReleaseIntArrayElements(unwantedIndexes, unwanted, 0);
 
           if (wantedCount != 0) {
             tr_torrentSetFileDLs(tor, wanted, wantedCount, true);
-            err = (tr_ctorGetDeleteSource(ctor, &delete) && delete) ? 3 : 0;
+            err = (tr_ctorGetDeleteSource(ctor, &del) && del) ? 3 : 0;
           }
         }
       } else {
         err = 1;
       }
     } else if (!err) {
-      err = (tr_ctorGetDeleteSource(ctor, &delete) && delete) ? 3 : 0;
+      err = (tr_ctorGetDeleteSource(ctor, &del) && del) ? 3 : 0;
     }
 
     if ((returnMeTorrentHash != NULL) && (tor != NULL)) {
       const tr_info *info = tr_torrentInfo(tor);
-      (*env)->SetByteArrayRegion(env, returnMeTorrentHash, 0, SHA_DIGEST_LENGTH,
+      env->SetByteArrayRegion(returnMeTorrentHash, 0, SHA_DIGEST_LENGTH,
                                  (const jbyte *) info->hash);
     }
 
@@ -125,7 +126,7 @@ Java_com_ap_transmission_btc_Native_torrentRemove(
 
 // ------------------------------------ torrentStop ------------------------------------------------
 static void *torrentStop(tr_session *session, void *data, Err *err) {
-  tr_torrent *tor = findTorrentByIdEx(session, (int) data, err);
+  tr_torrent *tor = findTorrentByIdEx(session, (int) (intptr_t) data, err);
   tr_torrentStop(tor);
   CATCH:
   return NULL;
@@ -141,7 +142,7 @@ Java_com_ap_transmission_btc_Native_torrentStop(
 
 // ------------------------------------ torrentStart -----------------------------------------------
 static void *torrentStart(tr_session *session, void *data, Err *err) {
-  tr_torrent *tor = findTorrentByIdEx(session, (int) data, err);
+  tr_torrent *tor = findTorrentByIdEx(session, (int) (intptr_t) data, err);
   tr_torrentStart(tor);
   CATCH:
   return NULL;
@@ -157,7 +158,7 @@ Java_com_ap_transmission_btc_Native_torrentStart(
 
 // ------------------------------------ torrentVerify -----------------------------------------------
 static void *torrentVerify(tr_session *session, void *data, Err *err) {
-  tr_torrent *tor = findTorrentByIdEx(session, (int) data, err);
+  tr_torrent *tor = findTorrentByIdEx(session, (int) (intptr_t) data, err);
   tr_torrentVerify(tor, NULL, NULL);
   CATCH:
   return NULL;
@@ -175,22 +176,23 @@ Java_com_ap_transmission_btc_Native_torrentVerify(
 JNIEXPORT jobjectArray JNICALL
 Java_com_ap_transmission_btc_Native_torrentListFilesFromFile(
     JNIEnv *env, jclass __unused c, jstring jtorrent) {
+{
   tr_info info;
   infoFromFileEx(env, 0, jtorrent, &info);
   tr_file_index_t count = info.fileCount;
   tr_file *files = info.files;
-  jclass jstring = (*env)->FindClass(env, "java/lang/String");
-  jobjectArray a = (*env)->NewObjectArray(env, count, jstring, NULL);
+  jclass jstring = env->FindClass("java/lang/String");
+  jobjectArray a = env->NewObjectArray(count, jstring, NULL);
 
   for (int i = 0; i < count; i++) {
-    jobject jname = (*env)->NewStringUTF(env, files[i].name);
-    (*env)->SetObjectArrayElement(env, a, i, jname);
-    (*env)->DeleteLocalRef(env, jname);
+    jobject jname = env->NewStringUTF(files[i].name);
+    env->SetObjectArrayElement(a, i, jname);
+    env->DeleteLocalRef(jname);
   }
 
   tr_metainfoFree(&info);
   return a;
-  CATCH:
+}  CATCH:
   return NULL;
 }
 // -------------------------------------------------------------------------------------------------
@@ -205,18 +207,19 @@ typedef struct ListFilesData {
 
 static void *
 torrentListFiles(tr_session *session, void *data, Err *err) {
+{
   ListFilesData *d = (ListFilesData *) data;
   tr_torrent *tor = findTorrentByIdEx(session, d->torrentId, err);
   d->count = tor->info.fileCount;
   if (d->count == 0) return NULL;
-  d->fileNames = malloc(d->count * (sizeof(char *)));
+  d->fileNames = (char **) malloc(d->count * (sizeof(char *)));
 
   for (int i = 0; i < d->count; i++) {
     tr_file *f = &(tor->info.files[i]);
     d->fileNames[i] = strdup(f->name);
   }
 
-  CATCH:
+}  CATCH:
   return NULL;
 }
 
@@ -225,20 +228,21 @@ Java_com_ap_transmission_btc_Native_torrentListFiles(
     JNIEnv *env, jclass __unused c, jlong jsession, jint torrentId) {
   ListFilesData d = {.count=0};
   jobjectArray result = NULL;
+{
   d.torrentId = torrentId;
   runInTransmissionThreadEx(env, jsession, torrentListFiles, &d);
   if (d.count == 0) return NULL;
-  result = (*env)->NewObjectArray(env, d.count, (*env)->FindClass(env, "java/lang/String"), NULL);
+  result = env->NewObjectArray(d.count, env->FindClass("java/lang/String"), NULL);
 
   for (int i = 0; i < d.count; i++) {
-    jobject jname = (*env)->NewStringUTF(env, d.fileNames[i]);
-    (*env)->SetObjectArrayElement(env, result, i, jname);
-    (*env)->DeleteLocalRef(env, jname);
+    jobject jname = env->NewStringUTF(d.fileNames[i]);
+    env->SetObjectArrayElement(result, i, jname);
+    env->DeleteLocalRef(jname);
     free(d.fileNames[i]);
   }
 
   free(d.fileNames);
-  CATCH:
+}  CATCH:
   return result;
 }
 // -------------------------------------------------------------------------------------------------
@@ -317,7 +321,7 @@ JNIEXPORT void JNICALL
 Java_com_ap_transmission_btc_Native_torrentMagnetToTorrentFile(
     JNIEnv *env, jclass __unused c, jlong jsession, jlong jsem,
     jstring jmagnet, jstring jpath, jint timeout, jbooleanArray enqueue) {
-  const char *magnet = (*env)->GetStringUTFChars(env, jmagnet, 0);
+  const char *magnet = env->GetStringUTFChars(jmagnet, 0);
   sem_t *sem = (sem_t *) jsem;
   MagnetToTorrentData d = {0};
   d.sem = sem;
@@ -325,6 +329,7 @@ Java_com_ap_transmission_btc_Native_torrentMagnetToTorrentFile(
 
   runInTransmissionThreadEx(env, jsession, torrentMagnetToTorrentFile, &d);
 
+{
   int s = 0;
   struct timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
@@ -345,21 +350,21 @@ Java_com_ap_transmission_btc_Native_torrentMagnetToTorrentFile(
     }
   } else {
     jboolean isCopy;
-    jboolean *enq = (*env)->GetBooleanArrayElements(env, enqueue, &isCopy);
+    jboolean *enq = env->GetBooleanArrayElements(enqueue, &isCopy);
     d.enqueue = enq[0];
-    (*env)->ReleaseBooleanArrayElements(env, enqueue, enq, 0);
+    env->ReleaseBooleanArrayElements(enqueue, enq, 0);
 
     if ((d.path != NULL) && !d.enqueue) {
-      const char *path = (*env)->GetStringUTFChars(env, jpath, 0);
+      const char *path = env->GetStringUTFChars(jpath, 0);
       cp(env, d.path, path);
-      (*env)->ReleaseStringUTFChars(env, jpath, path);
+      env->ReleaseStringUTFChars(jpath, path);
     } else if (!d.enqueue) {
       throwEX(env, CLASS_IOEX, "Failed to download meta data");
     }
   }
 
-  CATCH:
-  (*env)->ReleaseStringUTFChars(env, jmagnet, magnet);
+}  CATCH:
+  env->ReleaseStringUTFChars(jmagnet, magnet);
   runInTransmissionThread(__FILENAME__, __LINE__, env, jsession,
                           torrentMagnetToTorrentFileCleanup, &d);
 }
@@ -370,8 +375,8 @@ JNIEXPORT jint JNICALL
 Java_com_ap_transmission_btc_Native_torrentFindByHash(
     JNIEnv *env, jclass __unused c, jlong jsession, jbyteArray torrentHash) {
   char hash[SHA_DIGEST_LENGTH];
-  (*env)->GetByteArrayRegion(env, torrentHash, 0, sizeof(hash), (jbyte *) hash);
-  return (jint) runInTransmissionThreadEx(env, jsession, findTorrentByHashFunc, hash);
+  env->GetByteArrayRegion(torrentHash, 0, sizeof(hash), (jbyte *) hash);
+  return (jint) (intptr_t) runInTransmissionThreadEx(env, jsession, findTorrentByHashFunc, hash);
   CATCH:
   return -1;
 }
@@ -379,7 +384,7 @@ Java_com_ap_transmission_btc_Native_torrentFindByHash(
 
 // ------------------------------------ torrentGetName ---------------------------------------------
 static void *torrentGetName(tr_session *session, void *data, Err *err) {
-  tr_torrent *tor = findTorrentByIdEx(session, (int) data, err);
+  tr_torrent *tor = findTorrentByIdEx(session, (int) (intptr_t) data, err);
   return strdup(tor->info.name);
   CATCH:
   return NULL;
@@ -391,7 +396,7 @@ Java_com_ap_transmission_btc_Native_torrentGetName(
   jstring jname = NULL;
   char *name = (char *) runInTransmissionThreadEx(env, jsession, torrentGetName,
                                                   (void *) torrentId);
-  jname = (*env)->NewStringUTF(env, name);
+  jname = env->NewStringUTF(name);
   free(name);
   CATCH:
   return jname;
@@ -416,10 +421,10 @@ JNIEXPORT void JNICALL
 Java_com_ap_transmission_btc_Native_torrentGetHash(
     JNIEnv *env, jclass __unused c, jlong jsession, jint torrentId, jbyteArray torrentHash) {
   GetHashData d = {torrentId};
-  d.hash = (*env)->GetByteArrayElements(env, torrentHash, 0);
+  d.hash = env->GetByteArrayElements(torrentHash, 0);
   runInTransmissionThreadEx(env, jsession, torrentGetHash, &d);
   CATCH:
-  (*env)->ReleaseByteArrayElements(env, torrentHash, d.hash, 0);
+  env->ReleaseByteArrayElements(torrentHash, d.hash, 0);
 }
 // -------------------------------------------------------------------------------------------------
 
@@ -431,6 +436,7 @@ typedef struct GetPieceHashData {
 } GetPieceHashData;
 
 static void *torrentGetPieceHash(tr_session *session, void *data, Err *err) {
+{
   GetPieceHashData *d = (GetPieceHashData *) data;
   tr_torrent *tor = findTorrentByIdEx(session, d->torrentId, err);
   const tr_info *info = tr_torrentInfo(tor);
@@ -440,7 +446,7 @@ static void *torrentGetPieceHash(tr_session *session, void *data, Err *err) {
   else
     err->set(err, CLASS_IAEX, "Invalid piece index: %d", d->pieceIdx);
 
-  CATCH:
+}  CATCH:
   return NULL;
 }
 
@@ -449,10 +455,10 @@ Java_com_ap_transmission_btc_Native_torrentGetPieceHash(
     JNIEnv *env, jclass __unused c, jlong jsession, jint torrentId,
     jlong pieceIdx, jbyteArray pieceHash) {
   GetPieceHashData d = {torrentId, pieceIdx};
-  d.hash = (*env)->GetByteArrayElements(env, pieceHash, 0);
+  d.hash = env->GetByteArrayElements(pieceHash, 0);
   runInTransmissionThreadEx(env, jsession, torrentGetPieceHash, &d);
   CATCH:
-  (*env)->ReleaseByteArrayElements(env, pieceHash, d.hash, 0);
+  env->ReleaseByteArrayElements(pieceHash, d.hash, 0);
 }
 // -------------------------------------------------------------------------------------------------
 
@@ -464,6 +470,7 @@ typedef struct SetPiecesHiPriData {
 } SetPiecesHiPriData;
 
 static void *torrentSetPiecesHiPri(tr_session *session, void *data, Err *err) {
+{
   SetPiecesHiPriData *d = (SetPiecesHiPriData *) data;
   tr_torrent *tor = findTorrentByIdEx(session, d->torrentId, err);
   tr_piece *pieces = tor->info.pieces;
@@ -490,7 +497,7 @@ static void *torrentSetPiecesHiPri(tr_session *session, void *data, Err *err) {
     else tr_torrentStart(tor);
   }
 
-  CATCH:
+}  CATCH:
   return NULL;
 }
 
@@ -522,14 +529,15 @@ static void *torrentFindFile(tr_session *session, void *data, Err *err) {
 JNIEXPORT jstring JNICALL
 Java_com_ap_transmission_btc_Native_torrentFindFile(
     JNIEnv *env, jclass __unused c, jlong jsession, jint torrentId, jint fileIdx) {
+{
   FileData d = {torrentId, fileIdx};
   char *path = (char *) runInTransmissionThreadEx(env, jsession, torrentFindFile, &d);
   if (path == NULL) return NULL;
-  jstring jpath = (*env)->NewStringUTF(env, path);
+  jstring jpath = env->NewStringUTF(path);
   tr_free(path);
   return jpath;
 
-  CATCH:
+}  CATCH:
   return NULL;
 }
 // -------------------------------------------------------------------------------------------------
@@ -538,12 +546,13 @@ Java_com_ap_transmission_btc_Native_torrentFindFile(
 static void *torrentGetFileName(tr_session *session, void *data, Err *err) {
   FileData *d = (FileData *) data;
   void *name = NULL;
+{
   tr_torrent *tor = findTorrentByIdEx(session, d->torrentId, err);
   const tr_file *f = getFileInfoEx(tor, (uint32_t) d->fileIdx, err);
   size_t nameLen = strlen(f->name);
   name = calloc(nameLen + 1, sizeof(char));
   memcpy(name, f->name, nameLen);
-  CATCH:
+}  CATCH:
   return name;
 }
 
@@ -553,7 +562,7 @@ Java_com_ap_transmission_btc_Native_torrentGetFileName(
   jstring jname = NULL;
   FileData d = {torrentId, fileIdx};
   char *name = (char *) runInTransmissionThreadEx(env, jsession, torrentGetFileName, &d);
-  jname = (*env)->NewStringUTF(env, name);
+  jname = env->NewStringUTF(name);
   free(name);
   CATCH:
   return jname;
@@ -570,8 +579,13 @@ typedef struct FileStatData {
 
 static void *torrentGetFileStat(tr_session *session, void *data, Err *err) {
   FileStatData *d = (FileStatData *) data;
-  tr_torrent *tor = findTorrentByIdEx(session, d->torrentId, err);
-  const tr_file *f = getFileInfoEx(tor, (uint32_t) d->fileIdx, err);
+  tr_torrent *tor = nullptr;
+  const tr_file *f = nullptr;
+
+  {
+    tor = findTorrentByIdEx(session, d->torrentId, err);
+    f = getFileInfoEx(tor, (uint32_t) d->fileIdx, err);
+  }
 
   CATCH:
   if ((tor == NULL) || (f == NULL)) return NULL;
@@ -583,7 +597,7 @@ static void *torrentGetFileStat(tr_session *session, void *data, Err *err) {
   size_t fieldsCount = ((pieceCount % 64) == 0) ? (pieceCount / 64) : ((pieceCount / 64) + 1);
   jsize statLen = d->bitFieldsLen = (jsize) (fieldsCount + 6);
   jlong *bitFields = d->bitFields;
-  if (bitFields == NULL) bitFields = d->bitFields = malloc(sizeof(jlong) * statLen);
+  if (bitFields == NULL) bitFields = d->bitFields = (jlong *) malloc(sizeof(jlong) * statLen);
 
   tr_torrentAvailability(tor, tabs, info->pieceCount);
 
@@ -617,19 +631,19 @@ static void *torrentGetFileStat(tr_session *session, void *data, Err *err) {
  *  jlongArray[5] = fileComplete
  *  jlongArray[6...] = pieceBitFields
  */
-JNIEXPORT jbyteArray JNICALL
+JNIEXPORT jlongArray JNICALL
 Java_com_ap_transmission_btc_Native_torrentGetFileStat(
-    JNIEnv *env, jclass __unused c, jlong jsession, jint torrentId, jint fileIdx, jbyteArray stat) {
+    JNIEnv *env, jclass __unused c, jlong jsession, jint torrentId, jint fileIdx, jlongArray stat) {
   FileStatData d = {.torrentId= torrentId, .fileIdx = fileIdx, .bitFields = NULL};
-  if (stat != NULL) d.bitFields = (*env)->GetLongArrayElements(env, stat, 0);
+  if (stat != NULL) d.bitFields = env->GetLongArrayElements(stat, 0);
   runInTransmissionThreadEx(env, jsession, torrentGetFileStat, &d);
 
   if (stat == NULL) {
-    stat = (*env)->NewLongArray(env, d.bitFieldsLen);
-    (*env)->SetLongArrayRegion(env, stat, 0, d.bitFieldsLen, d.bitFields);
+    stat = env->NewLongArray(d.bitFieldsLen);
+    env->SetLongArrayRegion(stat, 0, d.bitFieldsLen, d.bitFields);
     free(d.bitFields);
   } else {
-    (*env)->ReleaseLongArrayElements(env, stat, d.bitFields, 0);
+    env->ReleaseLongArrayElements(stat, d.bitFields, 0);
   }
 
   CATCH:
@@ -675,10 +689,10 @@ JNIEXPORT void JNICALL
 Java_com_ap_transmission_btc_Native_torrentGetPiece(
     JNIEnv *env, jclass __unused c, jlong jsession, jint torrentId, jlong pieceIdx,
     jbyteArray dst, jint offset, jint len) {
-  GetPieceData d = {torrentId, pieceIdx, (*env)->GetByteArrayElements(env, dst, 0), offset, len};
+  GetPieceData d = {torrentId, pieceIdx, env->GetByteArrayElements(dst, 0), offset, len};
   runInTransmissionThreadEx(env, jsession, torrentGetPiece, &d);
   CATCH:
-  (*env)->ReleaseByteArrayElements(env, dst, d.dst, 0);
+  env->ReleaseByteArrayElements(dst, d.dst, 0);
 }
 // -------------------------------------------------------------------------------------------------
 
@@ -716,44 +730,45 @@ typedef struct StatBriefData {
  */
 static void *torrentStatBrief(tr_session *session, void *data, __unused Err *err) {
   StatBriefData *d = (StatBriefData *) data;
-  tr_torrent *it = session->torrentList;
-  int numTorrents = session->torrentCount;
+  int numTorrents = session->torrents.size();
   int statLen = numTorrents * 10;
 
   if ((d->stat == NULL) || (statLen != d->statLen)) {
-    d->stat = malloc(sizeof(jlong) * statLen);
+    d->stat = (jlong *) malloc(sizeof(jlong) * statLen);
     d->statLen = statLen;
     d->alloc = true;
   }
 
-  for (int i = 0; (it != NULL); it = it->next, i += 10) {
-    tr_torrent_activity status = tr_torrentGetActivity(it);
+  int i = -10;
+  for (auto tor : session->torrents) {
+    i += 10;
+    tr_torrent_activity status = tr_torrentGetActivity(tor);
 
-    d->stat[i] = it->uniqueId;
-    d->stat[i + 3] = tr_cpSizeWhenDone(&it->completion);
-    d->stat[i + 4] = tr_torrentGetLeftUntilDone(it);
-    d->stat[i + 5] = it->uploadedCur + it->uploadedPrev;
+    d->stat[i] = tor->uniqueId;
+    d->stat[i + 3] = tr_cpSizeWhenDone(&tor->completion);
+    d->stat[i + 4] = tr_torrentGetLeftUntilDone(tor);
+    d->stat[i + 5] = tor->uploadedCur + tor->uploadedPrev;
 
-    if (it->error != TR_STAT_LOCAL_ERROR) {
+    if (tor->error != TR_STAT_LOCAL_ERROR) {
       switch (status) {
         case TR_STATUS_STOPPED:
           d->stat[i + 1] = 0;
-          d->stat[i + 2] = (jlong) (tr_cpPercentDone(&it->completion) * 100);
+          d->stat[i + 2] = (jlong) (tr_cpPercentDone(&tor->completion) * 100);
           continue;
         case TR_STATUS_CHECK_WAIT :
         case TR_STATUS_CHECK:
           d->stat[i + 1] = 1;
-          d->stat[i + 2] = (jlong) (getVerifyProgress(it) * 100);
+          d->stat[i + 2] = (jlong) (getVerifyProgress(tor) * 100);
           break;
         case TR_STATUS_DOWNLOAD_WAIT:
         case TR_STATUS_DOWNLOAD :
           d->stat[i + 1] = 2;
-          d->stat[i + 2] = (jlong) (tr_cpPercentDone(&it->completion) * 100);
+          d->stat[i + 2] = (jlong) (tr_cpPercentDone(&tor->completion) * 100);
           break;
         case TR_STATUS_SEED_WAIT :
         case TR_STATUS_SEED:
           d->stat[i + 1] = 3;
-          d->stat[i + 2] = (jlong) (tr_cpPercentDone(&it->completion) * 100);
+          d->stat[i + 2] = (jlong) (tr_cpPercentDone(&tor->completion) * 100);
           break;
       }
     } else {
@@ -761,14 +776,14 @@ static void *torrentStatBrief(tr_session *session, void *data, __unused Err *err
       d->stat[i + 2] = 0;
     }
 
-    if (it->swarm != NULL) {
+    if (tor->swarm != NULL) {
       uint64_t const now = tr_time_msec();
       struct tr_swarm_stats sstat;
-      tr_swarmGetStats(it->swarm, &sstat);
+      tr_swarmGetStats(tor->swarm, &sstat);
       d->stat[i + 6] = sstat.activePeerCount[TR_UP];
       d->stat[i + 7] = sstat.activePeerCount[TR_DOWN] + sstat.activeWebseedCount;
-      d->stat[i + 8] = tr_bandwidthGetPieceSpeed_Bps(&it->bandwidth, now, TR_UP);
-      d->stat[i + 9] = tr_bandwidthGetPieceSpeed_Bps(&it->bandwidth, now, TR_DOWN);
+      d->stat[i + 8] = tor->bandwidth->getPieceSpeedBytesPerSecond(now, TR_UP);
+      d->stat[i + 9] = tor->bandwidth->getPieceSpeedBytesPerSecond(now, TR_DOWN);
     } else {
       d->stat[i + 6] = 0L;
       d->stat[i + 7] = 0L;
@@ -788,8 +803,8 @@ Java_com_ap_transmission_btc_Native_torrentStatBrief(
   bool release = false;
 
   if (jstat != NULL) {
-    d.stat = stat = (*env)->GetLongArrayElements(env, jstat, 0);
-    d.statLen = (*env)->GetArrayLength(env, jstat);
+    d.stat = stat = env->GetLongArrayElements(jstat, 0);
+    d.statLen = env->GetArrayLength(jstat);
     release = true;
   }
 
@@ -797,11 +812,11 @@ Java_com_ap_transmission_btc_Native_torrentStatBrief(
 
   CATCH:
   if (release) {
-    (*env)->ReleaseLongArrayElements(env, jstat, stat, 0);
+    env->ReleaseLongArrayElements(jstat, stat, 0);
   }
   if (d.alloc) {
-    jstat = (*env)->NewLongArray(env, d.statLen);
-    (*env)->SetLongArrayRegion(env, jstat, 0, d.statLen, d.stat);
+    jstat = env->NewLongArray(d.statLen);
+    env->SetLongArrayRegion(jstat, 0, d.statLen, d.stat);
     free(d.stat);
   }
 
@@ -811,7 +826,7 @@ Java_com_ap_transmission_btc_Native_torrentStatBrief(
 
 // ------------------------------------- torrentGetError -------------------------------------------
 static void *torrentGetError(tr_session *session, void *data, Err *err) {
-  tr_torrent *tor = findTorrentByIdEx(session, (int) data, err);
+  tr_torrent *tor = findTorrentByIdEx(session, (int) (intptr_t) data, err);
   return strdup(tor->errorString);
   CATCH:
   return NULL;
@@ -820,12 +835,13 @@ static void *torrentGetError(tr_session *session, void *data, Err *err) {
 JNIEXPORT jstring JNICALL
 Java_com_ap_transmission_btc_Native_torrentGetError(
     JNIEnv *env, jclass __unused c, jlong jsession, jint torrentId) {
+{
   char *err = (char *) runInTransmissionThreadEx(env, jsession, torrentGetError,
                                                  (void *) torrentId);
-  jstring jerr = (*env)->NewStringUTF(env, err);
+  jstring jerr = env->NewStringUTF(err);
   free(err);
   return jerr;
-  CATCH:
+}  CATCH:
   return NULL;
 }
 // -------------------------------------------------------------------------------------------------
@@ -852,11 +868,11 @@ Java_com_ap_transmission_btc_Native_torrentSetDnd(
   SetDndData d;
   d.dnd = dnd;
   d.torrentId = torrentId;
-  d.files = (tr_file_index_t *) (*env)->GetIntArrayElements(env, files, 0);
-  d.fileCount = (tr_file_index_t) (*env)->GetArrayLength(env, files);
+  d.files = (tr_file_index_t *) env->GetIntArrayElements(files, 0);
+  d.fileCount = (tr_file_index_t) env->GetArrayLength(files);
   runInTransmissionThreadEx(env, jsession, torrentSetDnd, &d);
   CATCH:
-  (*env)->ReleaseIntArrayElements(env, files, (jint *) d.files, 0);
+  env->ReleaseIntArrayElements(files, (jint *) d.files, 0);
 }
 // -------------------------------------------------------------------------------------------------
 
@@ -878,10 +894,11 @@ JNIEXPORT void JNICALL
 Java_com_ap_transmission_btc_Native_torrentSetLocation(
     JNIEnv *env, jclass __unused c, jlong jsession, jint torrentId, jstring jpath) {
   jboolean isCopy;
-  const char *path = (*env)->GetStringUTFChars(env, jpath, &isCopy);
+  const char *path = env->GetStringUTFChars(jpath, &isCopy);
   SetLocationData d = {torrentId, path};
   runInTransmissionThreadEx(env, jsession, torrentSetLocation, &d);
   CATCH:
-  (*env)->ReleaseStringUTFChars(env, jpath, path);
+  env->ReleaseStringUTFChars(jpath, path);
 }
 // -------------------------------------------------------------------------------------------------
+} // extern "C"
