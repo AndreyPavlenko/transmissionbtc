@@ -1,5 +1,6 @@
 ## Transmission BitTorrent Client for Android
 [<img alt="Get it on Google Play" height="60" src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png">](https://play.google.com/store/apps/details?id=com.ap.transmission.btc)
+[<img alt="Get it at IzzyOnDroid" height="60" src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png">](https://apt.izzysoft.de/packages/com.ap.transmission.btc)
 
 ## About
 This application is a port of the Transmission daemon for Android complemented with the following features: 
